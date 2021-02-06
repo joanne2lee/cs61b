@@ -43,8 +43,8 @@ public class LinkedListDeque<T> {
 
         if (size == 0) {
             last = first;
+            sentinel.prev = last;
         }
-        last = sentinel.prev;
 
         if (first.next != null) {
             first.next.prev = first;
@@ -82,11 +82,13 @@ public class LinkedListDeque<T> {
     }
 
     public T removeFirst() {
-        if (sentinel.next != null) {
-            IntNode first = sentinel.next;
-            sentinel.next = first.next;
+        if (size != 0) {
+            IntNode oldfirst = sentinel.next;
+            IntNode newfirst = oldfirst.next;
+            sentinel.next = newfirst;
+            newfirst.prev = sentinel;
             size -= 1;
-            return first.item;
+            return oldfirst.item;
         }
         return null;
     }
@@ -95,6 +97,8 @@ public class LinkedListDeque<T> {
         if (size != 0) {
             T last_item = last.item;
             last = last.prev;
+            last.next = sentinel;
+            sentinel.prev = last;
             size -= 1;
             return last_item;
         }
