@@ -23,14 +23,14 @@ public class ArrayDeque<T> {
 
 
 
-    private int firstIndex(int i) {
+    private int oneLess(int i) {
         if (i - 1 < 0) {
             return items.length - 1;
         }
         return i - 1;
     }
 
-    private int lastIndex(int i) {
+    private int oneMore(int i) {
         if (i + 1 > items.length - 1) {
             return 0;
         }
@@ -44,7 +44,7 @@ public class ArrayDeque<T> {
         }
         items[nextFirst] = item;
         size += 1;
-        nextFirst = firstIndex(nextFirst);
+        nextFirst = oneLess(nextFirst);
     }
 
     public void addLast(T item) {
@@ -53,7 +53,7 @@ public class ArrayDeque<T> {
         }
         items[nextLast] = item;
         size += 1;
-        nextLast = lastIndex(nextLast);
+        nextLast = oneMore(nextLast);
     }
 
     public boolean isEmpty() {
@@ -68,35 +68,43 @@ public class ArrayDeque<T> {
     }
 
     public void printDeque() {
-        for (int i = lastIndex(nextFirst); i <= nextLast; nextFirst = lastIndex(nextFirst)) {
+        for (int i = oneMore(nextFirst); i <= nextLast; nextFirst = oneMore(nextFirst)) {
             System.out.print(items[i] + " ");
         }
         System.out.println("");
     }
 
     public T removeFirst() {
-        T first = items[nextFirst];
-        items[nextFirst] = null;
+        if (size == 0) {
+            return null;
+        }
+        int firstIndex = oneMore(nextFirst);
+        T first = items[firstIndex];
+        items[firstIndex] = null;
         size -= 1;
-        nextFirst += 1;
+        nextFirst = firstIndex;
         return first;
     }
 
     public T removeLast() {
-        T last = items[nextLast];
-        items[nextLast] = null;
+        if (size == 0) {
+            return null;
+        }
+        int lastIndex = oneLess(nextLast);
+        T last = items[lastIndex];
+        items[lastIndex] = null;
         size -= 1;
-        nextLast -= 1;
+        nextLast = lastIndex;
         return last;
     }
 
     public T get(int index) {
-        int i = lastIndex(nextFirst);
+        int i = oneMore(nextFirst);
         while (i <= items.length) {
             if (i == index) {
                 return items[i];
             }
-            nextFirst = lastIndex(nextFirst);
+            nextFirst = oneMore(nextFirst);
         }
         return null;
     }

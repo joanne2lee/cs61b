@@ -71,6 +71,7 @@ public class LinkedListDeque<T> {
         if (sentinel.next != null) {
             IntNode first = sentinel.next;
             sentinel.next = first.next;
+            size -= 1;
             return first.item;
         }
         return null;
@@ -80,6 +81,7 @@ public class LinkedListDeque<T> {
         if (size != 0) {
             T last_item = last.item;
             last = last.prev;
+            size -= 1;
             return last_item;
         }
         return null;
