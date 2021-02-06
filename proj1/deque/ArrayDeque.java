@@ -99,14 +99,10 @@ public class ArrayDeque<T> {
     }
 
     public T get(int index) {
-        int i = oneMore(nextFirst);
-        while (i <= items.length) {
-            if (i == index) {
-                return items[i];
-            }
-            nextFirst = oneMore(nextFirst);
+        if (index > items.length || items[index] == null) {
+            return null;
         }
-        return null;
+        return items[index];
     }
 
 

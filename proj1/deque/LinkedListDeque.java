@@ -52,12 +52,17 @@ public class LinkedListDeque<T> {
     }
 
     public void addLast(T item) {
-        IntNode node = new IntNode(item, last, sentinel);
         if (size == 0) {
+            IntNode node = new IntNode(item, sentinel, sentinel);
             sentinel.next = node;
+            last = node;
+            sentinel.prev = last;
         }
-        last.next = node;
-        last = node;
+        else {
+            IntNode node = new IntNode(item, last, sentinel);
+            last.next = node;
+            last = node;
+        }
         size += 1;
     }
 
