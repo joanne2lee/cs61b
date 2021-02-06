@@ -37,13 +37,27 @@ public class LinkedListDeque<T> {
 
 
     public void addFirst(T item) {
-        sentinel.next = new IntNode(item, sentinel, sentinel.next);
+        IntNode first = new IntNode(item, sentinel, sentinel.next);
+        sentinel.next = first;
         size += 1;
+
+        if (size == 0) {
+            last = first;
+        }
+        last = sentinel.prev;
+
+        if (first.next != null) {
+            first.next.prev = first;
+        }
     }
 
     public void addLast(T item) {
-        last.next = new IntNode(item, last, sentinel);
-        last = last.next;
+        IntNode node = new IntNode(item, last, sentinel);
+        if (size == 0) {
+            sentinel.next = node;
+        }
+        last.next = node;
+        last = node;
         size += 1;
     }
 
