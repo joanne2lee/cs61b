@@ -20,7 +20,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T[] newArray = (T[]) new Object[capacity];
         int newIndex = 0;
         int itemsIndex = (nextFirst + 1) % items.length;
-        while (itemsIndex != nextLast) {
+        for (int count = 0; count < size; count += 1) {
             newArray[newIndex] = items[itemsIndex];
             itemsIndex = (itemsIndex + 1) % items.length;
             newIndex += 1;
@@ -45,6 +45,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         }
         return i + 1;
     }
+
 
     @Override
     public void addFirst(T item) {

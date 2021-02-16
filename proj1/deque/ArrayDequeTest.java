@@ -39,6 +39,31 @@ public class ArrayDequeTest {
         }
     }
 
+    @Test
+    public void resizeTest() {
+        ArrayDeque<Integer> a = new ArrayDeque<>();
+        a.addFirst(0);
+        a.removeLast();
+        a.addLast(2);
+        a.removeLast();
+        a.addLast(4);
+        a.addFirst(5);
+        a.get(0);
+        a.addFirst(7);
+        a.addFirst(8);
+        a.addFirst(9);
+        a.removeFirst();
+        a.addFirst(11);
+        a.addFirst(12);
+        a.addFirst(13);
+        a.get(6);
+        a.addLast(15);
+        a.addFirst(16);
+        a.addLast(17);
+        a.get(0);
+        assertEquals(11,(int)a.get(3));
+    }
+
 
 
 }
