@@ -1,8 +1,9 @@
 package deque;
 
 import jh61b.junit.In;
+import java.util.Iterator;
 
-public class LinkedListDeque<T> {
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T> {
     private IntNode sentinel;
     private int size;
 
@@ -33,7 +34,7 @@ public class LinkedListDeque<T> {
         size = 1;
     }
 
-
+    @Override
     public void addFirst(T item) {
         size += 1;
         if (size == 0) {
@@ -48,6 +49,7 @@ public class LinkedListDeque<T> {
         }
     }
 
+    @Override
     public void addLast(T item) {
         size += 1;
         if (size == 0) {
@@ -63,17 +65,12 @@ public class LinkedListDeque<T> {
     }
 
 
-    public boolean isEmpty() {
-        if (size == 0) {
-            return true;
-        }
-        return false;
-    }
-
+    @Override
     public int size() {
         return size;
     }
 
+    @Override
     public void printDeque() {
         IntNode node = sentinel.next;
         while (node.item != null) {
@@ -83,7 +80,7 @@ public class LinkedListDeque<T> {
         System.out.println("");
     }
 
-
+    @Override
     public T removeFirst() {
         if (size != 0) {
             T first_item = sentinel.next.item;
@@ -95,6 +92,7 @@ public class LinkedListDeque<T> {
         return null;
     }
 
+    @Override
     public T removeLast() {
         if (size != 0) {
             T last_item = sentinel.prev.item;
@@ -106,7 +104,7 @@ public class LinkedListDeque<T> {
         return null;
     }
 
-
+    @Override
     public T get(int index) {
         IntNode node = sentinel.next;
         int i = 0;
@@ -119,6 +117,7 @@ public class LinkedListDeque<T> {
         }
         return null;
     }
+
 
     public T getRecursive(int index) {
         if (index >= size) {
@@ -134,5 +133,44 @@ public class LinkedListDeque<T> {
         }
 
 
+    public Iterator<T> iterator() {
+        return new LLDIterator();
+    }
+
+
+    private class LLDIterator implements Iterator<T> {
+        private int index;
+
+        public LLDIterator() {
+            index = 0;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return index < size();
+        }
+
+        @Override
+        public T next() {
+            T item = get(index);
+            index += 1;
+            return item;
+        }
+    }
+
+    public boolean equals(Object o) {
+        if (!(o instanceof LinkedListDeque)) {
+            return false;
+        }
+        if (((LinkedListDeque<T>) o).size() != this.size()) {
+            return false;
+        }
+        for (int i = 0; i < size; i += 1) {
+            if (!(this.get(i).equals(((LinkedListDeque<T>) o).get(i)))) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }
