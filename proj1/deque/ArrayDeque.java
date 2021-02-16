@@ -22,8 +22,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         int itemsIndex = (nextFirst + 1) % items.length;
         for (int count = 0; count < size; count += 1) {
             newArray[newIndex] = items[itemsIndex];
-            itemsIndex = (itemsIndex + 1) % items.length;
             newIndex += 1;
+            itemsIndex = (itemsIndex + 1) % items.length;
         }
         items = newArray;
         nextFirst = items.length - 1;
