@@ -68,7 +68,7 @@ public class ArrayDeque<T> {
     }
 
     public void printDeque() {
-        for (int i = oneMore(nextFirst); i <= nextLast; nextFirst = oneMore(nextFirst)) {
+        for (int i = (nextFirst + 1) % items.length; i < nextLast; nextFirst = (nextFirst + 1) % items.length) {
             System.out.print(items[i] + " ");
         }
         System.out.println("");
@@ -83,6 +83,9 @@ public class ArrayDeque<T> {
         items[firstIndex] = null;
         size -= 1;
         nextFirst = firstIndex;
+        if (items.length >= 16 && size < items.length/4) {
+            resize(items.length/2);
+        }
         return first;
     }
 
@@ -95,14 +98,18 @@ public class ArrayDeque<T> {
         items[lastIndex] = null;
         size -= 1;
         nextLast = lastIndex;
+        if (items.length >= 16 && size < items.length/4) {
+            resize(items.length/2);
+        }
         return last;
     }
 
     public T get(int index) {
-        if (index > items.length || items[index] == null) {
+        if (index >= size) {
             return null;
         }
-        return items[index];
+        int gIndex = (nextFirst + 1 + index) % items.length;
+        return items[gIndex];
     }
 
 
