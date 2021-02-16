@@ -20,7 +20,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         T[] newArray = (T[]) new Object[capacity];
         int newIndex = 0;
         int itemsIndex = (nextFirst + 1) % items.length;
-        while (itemsIndex < nextLast) {
+        while (itemsIndex != nextLast) {
             newArray[newIndex] = items[itemsIndex];
             itemsIndex = (itemsIndex + 1) % items.length;
             newIndex += 1;
@@ -90,8 +90,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[firstIndex] = null;
         size -= 1;
         nextFirst = firstIndex;
-        if (items.length >= 16 && size < items.length/4) {
-            resize(items.length/2);
+        if (items.length >= 16 && size < items.length / 4) {
+            resize(items.length / 2);
         }
         return first;
     }
@@ -106,8 +106,8 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
         items[lastIndex] = null;
         size -= 1;
         nextLast = lastIndex;
-        if (items.length >= 16 && size < items.length/4) {
-            resize(items.length/2);
+        if (items.length >= 16 && size < items.length / 4) {
+            resize(items.length / 2);
         }
         return last;
     }
@@ -129,7 +129,7 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     private class ADIterator implements Iterator<T> {
         private int index;
 
-        public ADIterator() {
+        ADIterator() {
             index = 0;
         }
 
@@ -147,14 +147,14 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T> {
     }
 
     public boolean equals(Object o) {
-        if (!(o instanceof ArrayDeque)) {
+        if (!(o instanceof Deque)) {
             return false;
         }
-        if (((ArrayDeque<T>) o).size() != this.size()) {
+        if (((Deque<T>) o).size() != this.size()) {
             return false;
         }
         for (int i = 0; i < size; i += 1) {
-            if (!(this.get(i).equals(((ArrayDeque<T>) o).get(i)))) {
+            if (!(this.get(i).equals(((Deque<T>) o).get(i)))) {
                 return false;
             }
         }

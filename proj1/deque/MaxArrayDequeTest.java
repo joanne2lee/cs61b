@@ -13,7 +13,7 @@ public class MaxArrayDequeTest {
 
     @Test
     public void maxTest() {
-        testComparator c = new testComparator();
+        TestComparator c = new TestComparator();
         MaxArrayDeque a = new MaxArrayDeque(c);
         a.addLast(5);
         a.addLast(10);

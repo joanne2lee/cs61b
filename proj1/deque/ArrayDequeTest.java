@@ -13,7 +13,7 @@ public class ArrayDequeTest {
     public void randomizedTest() {
         ArrayDeque<Integer> a = new ArrayDeque<>();
 
-        int N = 5000;
+        int N = 50000;
         for (int i = 0; i < N; i += 1) {
             int operationNumber = StdRandom.uniform(0, 5);
 
