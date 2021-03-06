@@ -1,5 +1,7 @@
 package bstmap;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
@@ -99,6 +101,19 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         return n;
     }
 
+    public void printInOrder() {
+        List<String> lst = new ArrayList<>();
+        printHelper(lst, root);
+        System.out.println(String.join(",", lst));
+    }
+
+    private void printHelper(List<String> lst, Node n) {
+        if (n != null) {
+            lst.add(n.toString());
+            printHelper(lst, n.left);
+            printHelper(lst, n.right);
+        }
+    }
 
     @Override
     public Set<K> keySet() {
