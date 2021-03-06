@@ -1,0 +1,4 @@
+Our BSTMap is comparable to the built in structures (TreeMap and HashMap) in that they are able to handle very large input sizes.
+The ULLMap, however, takes longer to run as the input size increases, and eventually leads to a "Stack Overflow."
+At this point, it seems that the HashMap is the only structure that maintains constant time, while the TreeMap shows an increase in runtime,
+as well as our BSTMap to a greater extent.
