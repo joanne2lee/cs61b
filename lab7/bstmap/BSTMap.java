@@ -109,8 +109,8 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
 
     private void printHelper(List<String> lst, Node n) {
         if (n != null) {
-            lst.add(n.toString());
             printHelper(lst, n.left);
+            lst.add(n.toString());
             printHelper(lst, n.right);
         }
     }
