@@ -201,6 +201,90 @@ public class Repository {
     }
 
 
+    public static void checkoutFile(String fileName) {
+        Commit c = currCommit();
+        HashMap<String, String> cFilesMap = c.getFilesMap();
+        if (!cFilesMap.containsKey(fileName)) {
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
+        File f = join(blobs, cFilesMap.get(fileName));
+        byte[] b = readContents(f);
+
+        File workingFile = join(CWD, fileName);
+        Utils.writeContents(workingFile, b);
+
+    }
+
+
+    public static void checkoutFile(String commitID, String fileName) {
+        File commitFile = join(commits, commitID);
+        if (!commitFile.exists()) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        Commit c = Utils.readObject(commitFile, Commit.class);
+        HashMap<String, String> cFilesMap = c.getFilesMap();
+        if (!cFilesMap.containsKey(fileName)) {
+            System.out.println("File does not exist in that commit.");
+            System.exit(0);
+        }
+        File f = join(blobs, cFilesMap.get(fileName));
+        byte[] b = readContents(f);
+        File workingFile = join(CWD, fileName);
+        Utils.writeContents(workingFile, b);
+
+    }
+
+
+
+    public static void checkoutBranch(String branchName) {
+        StagingArea sa = currStagingArea();
+
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        if (!branches.containsKey(branchName)) {
+            System.out.println("No such branch exists.");
+            System.exit(0);
+        }
+        if (branchName.equals(currBranch())) {
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
+        }
+
+        File c = join(commits, branches.get(branchName));
+        Commit checkoutCommit = Utils.readObject(c, Commit.class);
+        HashMap<String, String> checkoutFiles = checkoutCommit.getFilesMap();
+        Commit currentCommit = currCommit();
+
+
+        for (String f : Utils.plainFilenamesIn(CWD)) {
+            if (!currentCommit.getFilesMap().containsKey(f) && checkoutFiles.containsKey(f)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+            if (currentCommit.getFilesMap().containsKey(f) && !checkoutFiles.containsKey(f)) {
+                Utils.restrictedDelete(f);
+            }
+        }
+
+        for (String f : checkoutFiles.keySet()) {
+            File workingFile = join(CWD, f);
+            String blobID = checkoutFiles.get(f);
+            File blobFile = join(blobs, blobID);
+            byte[] blob = readContents(blobFile);
+            Utils.writeContents(workingFile, blob);
+
+        }
+
+        Utils.writeContents(HEAD, branchName);
+
+        sa.clear();
+        sa.save(stagingFile);
+
+    }
+
+
+
 
 
     private static StagingArea currStagingArea() {

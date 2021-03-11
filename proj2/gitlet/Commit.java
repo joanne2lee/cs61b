@@ -17,22 +17,22 @@ import java.util.TimeZone;
 public class Commit implements Serializable {
 
     /** The SHA-1 hash of this commit. */
-    private String commitID;
+    private final String commitID;
 
     /** The HashMap of files this Commit tracks, where
      * key = file name, and
      * value = hash ID of file blob. */
-    private HashMap<String, String> filesMap;
+    private final HashMap<String, String> filesMap;
 
 
     /** The message of this Commit. */
-    private String message;
+    private final String message;
 
-    /** The SHA-1 hash of this commit's parent commit. */
-    private String parentID;
+    /** The SHA-1 hash of the parent of this Commit. */
+    private final String parentID;
 
     /** The timestamp of this Commit. */
-    private String timestamp;
+    private final String timestamp;
 
 
 
@@ -43,16 +43,17 @@ public class Commit implements Serializable {
 
 
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z");
-
-        Date commitTime = new Date();
-        this.timestamp = sdf.format(commitTime);
-
-        if (message == "initial commit") {
+        if (message.equals("initial commit")) {
             Calendar c = Calendar.getInstance();
             c.setTimeZone(TimeZone.getTimeZone("UTC"));
             c.set(1970, 1, 1);
             this.timestamp = sdf.format(c.getTime());
+        } else {
+            Date commitTime = new Date();
+            this.timestamp = sdf.format(commitTime);
         }
+
+
 
         this.commitID = Utils.sha1(Utils.serialize(this));
     }
