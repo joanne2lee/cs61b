@@ -1,8 +1,5 @@
 package hashmap;
 
-import net.sf.saxon.expr.Component;
-import net.sf.saxon.pattern.ContentTypeTest;
-import org.checkerframework.checker.units.qual.C;
 
 import java.util.*;
 
