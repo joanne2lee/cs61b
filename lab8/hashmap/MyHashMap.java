@@ -188,20 +188,20 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
     }
 
     @Override
-    public Iterator iterator() {
+    public Iterator<K> iterator() {
         return keys.iterator();
     }
 
 
     @Override
     public V remove(K key) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("");
     }
 
 
     @Override
     public V remove(K key, V value) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("");
     }
 
 }
