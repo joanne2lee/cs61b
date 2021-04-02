@@ -99,14 +99,14 @@ public class Repository {
 
         StagingArea sa = currStagingArea();
 
-        // create blob of file
-        byte[] blob = Utils.readContents(addFile);
-        String blobID = Utils.sha1(blob);
-
         // file should not be staged for removal
         if (sa.filesToRemove().contains(fileName)) {
             sa.filesToRemove().remove(fileName);
         }
+
+        // create blob of file
+        byte[] blob = Utils.readContents(addFile);
+        String blobID = Utils.sha1(blob);
 
 
         // if the file has not changed from the current commit,
@@ -119,7 +119,6 @@ public class Repository {
             }
             return;
         }
-
 
         // stage file for addition
         sa.add(fileName, blobID);

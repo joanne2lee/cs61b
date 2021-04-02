@@ -2,19 +2,19 @@ package gitlet;
 
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.io.File;
 
 
 public class StagingArea implements Serializable {
 
     private HashMap<String, String> stagedForAddition;
-    private HashSet<String> stagedForRemoval;
+    private ArrayList<String> stagedForRemoval;
 
     public StagingArea() {
         stagedForAddition = new HashMap<>();
-        stagedForRemoval = new HashSet<>();
+        stagedForRemoval = new ArrayList<>();
     }
 
     public void add(String fileName, String blobID) {
@@ -33,13 +33,13 @@ public class StagingArea implements Serializable {
         return stagedForAddition;
     }
 
-    public HashSet<String> filesToRemove() {
+    public ArrayList<String> filesToRemove() {
         return stagedForRemoval;
     }
 
     public void clear() {
         stagedForAddition = new HashMap<>();
-        stagedForRemoval = new HashSet<>();
+        stagedForRemoval = new ArrayList<>();
     }
 
 
