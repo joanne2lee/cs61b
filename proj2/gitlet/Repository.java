@@ -241,7 +241,7 @@ public class Repository {
             File commitFile = join(commits, commit);
             Commit c = Utils.readObject(commitFile, Commit.class);
 
-            if (c.getFilesMap().equals(commitMessage)) {
+            if (c.getMessage().equals(commitMessage)) {
                 System.out.println(c.getID());
                 found = true;
             }
@@ -404,24 +404,22 @@ public class Repository {
     }
 
     public static void reset(String commitID) {
-        StagingArea sa = currStagingArea();
-
         File c = join(commits, commitID);
         if (!c.exists()) {
             System.out.println("No commit with that id exists.");
             System.exit(0);
         }
-        Commit commit = Utils.readObject(c, Commit.class);
 
-        for (String file : commit.getFilesMap().keySet()) {
-            checkoutFile(commitID, file);
-        }
+        String currentBranch = currBranch();
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
-        branches.put(currBranch(), commitID);
-        Utils.writeObject(branchesFile, branches);
+        branches.put("temp", commitID);
 
-        sa.clear();
-        sa.save(stagingFile);
+        checkoutBranch("temp");
+
+        branches.put(currentBranch, commitID);
+        branches.remove("temp");
+        Utils.writeContents(HEAD, currentBranch);
+        Utils.writeObject(branchesFile, branches);
     }
 
 
