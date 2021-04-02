@@ -413,6 +413,8 @@ public class Repository {
         String currentBranch = currBranch();
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
         branches.put("temp", commitID);
+        Utils.writeObject(branchesFile, branches);
+
 
         checkoutBranch("temp");
 
