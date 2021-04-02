@@ -115,8 +115,8 @@ public class Repository {
         if (blobID.equals(currentCommit.getFilesMap().get(fileName))) {
             if (sa.filesToAdd().containsKey(fileName)) {
                 sa.filesToAdd().remove(fileName);
-                sa.save(stagingFile);
             }
+            sa.save(stagingFile);
             return;
         }
 
