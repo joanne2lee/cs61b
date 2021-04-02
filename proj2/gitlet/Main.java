@@ -67,6 +67,21 @@ public class Main {
                     default:
                 }
                 break;
+            case "branch":
+                validateNumArgs(args, 2);
+                String branchName = args[1];
+                Repository.branch(branchName);
+                break;
+            case "rm-branch":
+                validateNumArgs(args, 2);
+                String rmBranchName = args[1];
+                Repository.rmBranch(rmBranchName);
+                break;
+            case "reset":
+                validateNumArgs(args, 2);
+                String commitID = args[1];
+                Repository.reset(commitID);
+                break;
 
             default:
                 System.out.println("No command with that name exists.");

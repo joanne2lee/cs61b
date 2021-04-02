@@ -23,21 +23,21 @@ public class Repository {
     static final File GITLET_DIR = join(CWD, ".gitlet");
 
     /** A file tracking the staging area. */
-    public static File stagingFile = join(GITLET_DIR, "stagingArea.txt");
+    static File stagingFile = join(GITLET_DIR, "stagingArea.txt");
 
     /** A folder containing commits, files named by commit IDs. */
-    public static File commits = join(GITLET_DIR, "commits");
+    static File commits = join(GITLET_DIR, "commits");
 
     /** A folder containing blobs, files named by blob IDs. */
-    public static File blobs = join(GITLET_DIR, "blobs");
+    static File blobs = join(GITLET_DIR, "blobs");
 
     /** A file tracking the branches as a HashMap, where
      * keys = the branch name, and
      * values = last commit (head) of the branch. */
-    public static File branchesFile = join(GITLET_DIR, "branches.txt");
+    static File branchesFile = join(GITLET_DIR, "branches.txt");
 
     /** A file tracking the HEAD branch. */
-    public static File HEAD = join(GITLET_DIR, "HEAD.txt");
+    static File HEAD = join(GITLET_DIR, "HEAD.txt");
 
 
 
@@ -47,8 +47,7 @@ public class Repository {
         if (GITLET_DIR.exists()) {
             System.out.println("A Gitlet version-control system already exists in the current directory.");
             System.exit(0);
-        }
-        else {
+        } else {
             GITLET_DIR.mkdir();
             try {
                 stagingFile.createNewFile();
@@ -185,17 +184,13 @@ public class Repository {
         if (sa.filesToAdd().containsKey(fileName)) {
             sa.filesToAdd().remove(fileName);
             sa.save(stagingFile);
-        }
-
 
         // stage the file for removal only if it is being tracked in the current commit
-        if (currentCommit.getFilesMap().containsKey(fileName)) {
+        } else if (currentCommit.getFilesMap().containsKey(fileName)) {
             sa.rm(fileName);
             Utils.restrictedDelete(fileName);
             sa.save(stagingFile);
-        }
-
-        else {
+        } else {
             System.out.println("No reason to remove the file.");
         }
     }
@@ -266,8 +261,7 @@ public class Repository {
         for (String b : branches.keySet()) {
             if (b.equals(currBranch())) {
                 System.out.println("*" + b);
-            }
-            else {
+            } else {
                 System.out.println(b);
             }
         }
@@ -293,7 +287,7 @@ public class Repository {
 
         System.out.println("=== Untracked Files ===");
         System.out.println();
-        
+
     }
 
 
@@ -381,6 +375,50 @@ public class Repository {
 
     }
 
+    public static void branch(String branchName) {
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        if (branches.containsKey(branchName)) {
+            System.out.println("A branch with that name already exists.");
+            System.exit(0);
+        }
+        branches.put(branchName, currCommit().getID());
+        Utils.writeObject(branchesFile, branches);
+    }
+
+    public static void rmBranch(String branchName) {
+        if (currBranch().equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        if (!(branches.containsKey(branchName))) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        branches.remove(branchName);
+        Utils.writeObject(branchesFile, branches);
+    }
+
+    public static void reset(String commitID) {
+        StagingArea sa = currStagingArea();
+
+        File c = join(commits, commitID);
+        if (!c.exists()) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        Commit commit = Utils.readObject(c, Commit.class);
+
+        for (String file : commit.getFilesMap().keySet()) {
+            checkoutFile(commitID, file);
+        }
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        branches.put(currBranch(), commitID);
+        Utils.writeObject(branchesFile, branches);
+
+        sa.clear();
+        sa.save(stagingFile);
+    }
 
 
 
