@@ -21,6 +21,10 @@ public class StagingArea implements Serializable {
         stagedForAddition.put(fileName, blobID);
     }
 
+    public void rm(String file) {
+        stagedForRemoval.add(file);
+    }
+
     public void save(File stagingFile) {
         Utils.writeObject(stagingFile, this);
     }

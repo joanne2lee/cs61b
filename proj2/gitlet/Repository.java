@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 import static gitlet.Utils.*;
 
@@ -176,7 +177,27 @@ public class Repository {
 
 
     public static void rm(String fileName) {
+        StagingArea sa = currStagingArea();
 
+        Commit currentCommit = currCommit();
+
+        // file should not be staged for addition
+        if (sa.filesToAdd().containsKey(fileName)) {
+            sa.filesToAdd().remove(fileName);
+            sa.save(stagingFile);
+        }
+
+
+        // stage the file for removal only if it is being tracked in the current commit
+        if (currentCommit.getFilesMap().containsKey(fileName)) {
+            sa.rm(fileName);
+            Utils.restrictedDelete(fileName);
+            sa.save(stagingFile);
+        }
+
+        else {
+            System.out.println("No reason to remove the file.");
+        }
     }
 
 
@@ -199,6 +220,83 @@ public class Repository {
             c = Utils.readObject(f, Commit.class);
         }
     }
+
+    public static void globalLog() {
+        List<String> commitList = Utils.plainFilenamesIn(commits);
+
+        for (String commit : commitList) {
+            File commitFile = join(commits, commit);
+            Commit c = Utils.readObject(commitFile, Commit.class);
+
+            System.out.println("===");
+            System.out.println("commit " + c.getID());
+            System.out.println("Date: " + c.getDate());
+            System.out.println(c.getMessage());
+            System.out.println();
+        }
+    }
+
+    public static void find(String commitMessage) {
+        List<String> commitList = Utils.plainFilenamesIn(commits);
+        boolean found = false;
+
+        for (String commit : commitList) {
+            File commitFile = join(commits, commit);
+            Commit c = Utils.readObject(commitFile, Commit.class);
+
+            if (c.getFilesMap().equals(commitMessage)) {
+                System.out.println(c.getID());
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("Found no commit with that message.");
+        }
+
+    }
+
+
+    public static void status() {
+        StagingArea sa = currStagingArea();
+
+        // branches
+        System.out.println("=== Branches ===");
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        for (String b : branches.keySet()) {
+            if (b.equals(currBranch())) {
+                System.out.println("*" + b);
+            }
+            else {
+                System.out.println(b);
+            }
+        }
+        System.out.println();
+
+        // files staged for addition
+        System.out.println("=== Staged Files ===");
+        for (String f : sa.filesToAdd().keySet()) {
+            System.out.println(f);
+        }
+        System.out.println();
+
+        // files staged for removal
+        System.out.println("=== Removed Files ===");
+        for (String f : sa.filesToRemove()) {
+            System.out.println(f);
+        }
+        System.out.println();
+
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        System.out.println();
+
+        System.out.println("=== Untracked Files ===");
+        System.out.println();
+        
+    }
+
+
 
 
     public static void checkoutFile(String fileName) {
