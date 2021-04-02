@@ -56,9 +56,17 @@ public class Main {
             case "checkout":
                 switch(args.length) {
                     case 2:
+                        if (!args[1].equals("--")) {
+                            System.out.println("Incorrect operands.");
+                            System.exit(0);
+                        }
                         Repository.checkoutBranch(args[1]);
                         break;
                     case 3:
+                        if (!args[2].equals("--")) {
+                            System.out.println("Incorrect operands.");
+                            System.exit(0);
+                        }
                         Repository.checkoutFile(args[2]);
                         break;
                     case 4:

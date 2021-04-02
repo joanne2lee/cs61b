@@ -2,6 +2,8 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -101,6 +103,11 @@ public class Repository {
         byte[] blob = Utils.readContents(addFile);
         String blobID = Utils.sha1(blob);
 
+        // file should not be staged for removal
+        if (sa.filesToRemove().contains(fileName)) {
+            sa.filesToRemove().remove(fileName);
+        }
+
 
         // if the file has not changed from the current commit,
         // the file should not be staged for addition
@@ -113,10 +120,6 @@ public class Repository {
             return;
         }
 
-        // file should not be staged for removal
-        if (sa.filesToRemove().contains(fileName)) {
-            sa.filesToRemove().remove(fileName);
-        }
 
         // stage file for addition
         sa.add(fileName, blobID);
@@ -257,12 +260,14 @@ public class Repository {
 
         // branches
         System.out.println("=== Branches ===");
-        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
-        for (String b : branches.keySet()) {
-            if (b.equals(currBranch())) {
-                System.out.println("*" + b);
+        HashMap<String, String> b = Utils.readObject(branchesFile, HashMap.class);
+        ArrayList<String> branches = new ArrayList(b.keySet());
+        Collections.sort(branches);
+        for (String branch : branches) {
+            if (branch.equals(currBranch())) {
+                System.out.println("*" + branch);
             } else {
-                System.out.println(b);
+                System.out.println(branch);
             }
         }
         System.out.println();
