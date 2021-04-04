@@ -577,27 +577,25 @@ public class Repository {
 
         fringe1.addLast(commit1);
         fringe2.addLast(commit2);
-        while (!fringe1.isEmpty()) {
+        while (!fringe1.isEmpty() && !fringe2.isEmpty()) {
             String s1 = fringe1.removeFirst();
-            while (!fringe2.isEmpty()) {
-                String s2 = fringe2.removeFirst();
-                if (s1.equals(s2)) {
-                    return s2;
-                }
-                Commit c2 = getCommit(s2);
-                if (c2.getParent() != null) {
-                    fringe1.addLast(c2.getParent());
-                }
-                if (c2.secondParent() != null) {
-                    fringe1.addLast(c2.secondParent());
-                }
+            String s2 = fringe2.removeFirst();
+            if (s1.equals(s2)) {
+                return s2;
             }
             Commit c1 = getCommit(s1);
+            Commit c2 = getCommit(s2);
             if (c1.getParent() != null) {
                 fringe1.addLast(c1.getParent());
             }
             if (c1.secondParent() != null) {
                 fringe1.addLast(c1.secondParent());
+            }
+            if (c2.getParent() != null) {
+                fringe2.addLast(c2.getParent());
+            }
+            if (c2.secondParent() != null) {
+                fringe2.addLast(c2.secondParent());
             }
         }
         return null;
