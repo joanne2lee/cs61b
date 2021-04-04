@@ -15,7 +15,6 @@ public class Main {
             System.exit(0);
         }
 
-
         String firstArg = args[0];
         switch(firstArg) {
             case "init":
@@ -90,7 +89,11 @@ public class Main {
                 String commitID = args[1];
                 Repository.reset(commitID);
                 break;
-
+            case "merge":
+                validateNumArgs(args, 2);
+                String mergeBranch = args[1];
+                Repository.merge(mergeBranch);
+                break;
             default:
                 System.out.println("No command with that name exists.");
                 System.exit(0);

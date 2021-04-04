@@ -403,6 +403,8 @@ public class Repository {
         Utils.writeObject(branchesFile, branches);
     }
 
+
+
     public static void reset(String commitID) {
         File c = join(commits, commitID);
         if (!c.exists()) {
@@ -412,17 +414,186 @@ public class Repository {
 
         String currentBranch = currBranch();
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+
+        // create a temporary branch with the given commit as its head commit
         branches.put("temp", commitID);
         Utils.writeObject(branchesFile, branches);
 
-
+        // checkout the branch ( = checkout all files in the branch's head commit)
         checkoutBranch("temp");
 
+        // set current branch's head to commit
+        // delete temp branch
+        // reverse HEAD change done by checkoutBranch
         branches.put(currentBranch, commitID);
         branches.remove("temp");
         Utils.writeContents(HEAD, currentBranch);
         Utils.writeObject(branchesFile, branches);
     }
+
+
+    public static void merge(String branchName) {
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+
+        File g = join(commits, branches.get(branchName));
+        Commit given = Utils.readObject(g, Commit.class);
+
+        Commit current = currCommit();
+
+
+        StagingArea sa = currStagingArea();
+        if (!sa.filesToAdd().isEmpty() || !sa.filesToRemove().isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        if (!branches.containsKey(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        if (currBranch().equals(branchName)) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+
+        for (String f : Utils.plainFilenamesIn(CWD)) {
+            if (!current.getFilesMap().containsKey(f) && given.getFilesMap().containsKey(f)) {
+                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.exit(0);
+            }
+        }
+
+        Commit splitPoint = findSplitPoint(given);
+
+        if (splitPoint.getID().equals(given.getID())) {
+            System.out.println("Given branch is an ancestor of the current branch.");
+            return;
+        }
+
+        if (splitPoint.getID().equals(current.getID())) {
+            checkoutBranch(branchName);
+            System.out.println("Current branch fast-forwarded.");
+            return;
+        }
+
+        HashMap<String, String> currentFiles = current.getFilesMap();
+        HashMap<String, String> givenFiles = given.getFilesMap();
+        HashMap<String, String> splitFiles = splitPoint.getFilesMap();
+
+        // files that have been modified in the given branch since the split point
+        ArrayList<String> modifiedInGiven = new ArrayList<>();
+        for (String f : splitFiles.keySet()) {
+            if (givenFiles.containsKey(f)) {
+                if (!givenFiles.get(f).equals(splitFiles.get(f))) {
+                    modifiedInGiven.add(f);
+                }
+            }
+        }
+
+        // files that have been modified in the current branch since the split point
+        ArrayList<String> modifiedInCurrent = new ArrayList<>();
+        for (String f : splitFiles.keySet()) {
+            if (currentFiles.containsKey(f)) {
+                if (!currentFiles.get(f).equals(splitFiles.get(f))) {
+                    modifiedInCurrent.add(f);
+                }
+            }
+        }
+
+
+        for (String f : modifiedInGiven) {
+            if (currentFiles.containsKey(f) && !modifiedInCurrent.contains(f)) {
+                checkoutFile(given.getID(), f);
+            }
+        }
+
+        for (String f : givenFiles.keySet()) {
+            if (!splitFiles.containsKey(f) && !currentFiles.containsKey(f)) {
+                checkoutFile(given.getID(), f);
+                add(f);
+            }
+        }
+
+        for (String f : splitFiles.keySet()) {
+            if (!modifiedInCurrent.contains(f) && !givenFiles.containsKey(f)) {
+                rm(f);
+            }
+        }
+
+        boolean inConflict = false;
+
+
+
+        // CONFLICT IF:
+        // file was present at split point and
+            // file modified differently at both branches,
+            // file modified at one branch and deleted at other
+        for (String f : splitFiles.keySet()) {
+            if (modifiedInCurrent.contains(f) && modifiedInGiven.contains(f)
+                && !givenFiles.get(f).equals(currentFiles.get(f))) {
+                inConflict = true;
+                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+            } else if (modifiedInCurrent.contains(f) && !givenFiles.containsKey(f)) {
+                inConflict = true;
+                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+            } else if (modifiedInGiven.contains(f) && !currentFiles.containsKey(f)) {
+                inConflict = true;
+                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+            }
+        }
+
+        // file was absent at split point and has different versions at branches
+        for (String f : currentFiles.keySet()) {
+            if (givenFiles.containsKey(f) && !splitFiles.containsKey(f)) {
+                if (!currentFiles.get(f).equals(givenFiles.get(f))) {
+                    inConflict = true;
+                    mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+                }
+            }
+        }
+        commit("Merged " + branchName + " into " + currBranch() + ".");
+        if (inConflict) {
+            System.out.println("Encountered a merge conflict.");
+        }
+    }
+
+
+    private static void mergeHelper(String fileName, String currBlob, String givenBlob) {
+        String cont = "<<<<<<< HEAD\n";
+        File currF = join(blobs, currBlob);
+        cont += Utils.readContentsAsString(currF);
+        cont += "=======\n";
+        File givenF = join(blobs, givenBlob);
+        cont += Utils.readContentsAsString(givenF);
+        cont += ">>>>>>>\n";
+
+        File merged = join(CWD, fileName);
+        Utils.writeContents(merged, cont);
+    }
+
+
+
+    private static Commit findSplitPoint(Commit branchHead) {
+        Commit commit1 = currCommit();
+        Commit commit2 = branchHead;
+
+        while (commit1 != null) {
+            while (commit2 != null) {
+                if (commit2.getID().equals(commit1.getID())) {
+                    return commit2;
+                }
+                File parent2 = join(commits, commit2.getParent());
+                commit2 = Utils.readObject(parent2, Commit.class);
+            }
+            File parent1 = join(commits, commit1.getParent());
+            commit1 = Utils.readObject(parent1, Commit.class);
+        }
+        return null;
+    }
+
+
+
+
+
 
 
 
