@@ -525,16 +525,19 @@ public class Repository {
             // file modified differently at both branches,
             // file modified at one branch and deleted at other
         for (String f : splitFiles.keySet()) {
+            File currFile = join(blobs, currentFiles.get(f));
+            File givenFile = join(blobs, givenFiles.get(f));
+
             if (modifiedInCurrent.contains(f) && modifiedInGiven.contains(f)
                 && !givenFiles.get(f).equals(currentFiles.get(f))) {
                 inConflict = true;
-                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+                mergeHelper(f, Utils.readContentsAsString(currFile), Utils.readContentsAsString(givenFile));
             } else if (modifiedInCurrent.contains(f) && !givenFiles.containsKey(f)) {
                 inConflict = true;
-                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+                mergeHelper(f, Utils.readContentsAsString(currFile), "");
             } else if (modifiedInGiven.contains(f) && !currentFiles.containsKey(f)) {
                 inConflict = true;
-                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
+                mergeHelper(f, "", Utils.readContentsAsString(givenFile));
             }
         }
 
@@ -554,13 +557,11 @@ public class Repository {
     }
 
 
-    private static void mergeHelper(String fileName, String currBlob, String givenBlob) {
+    private static void mergeHelper(String fileName, String currCont, String givenCont) {
         String cont = "<<<<<<< HEAD\n";
-        File currF = join(blobs, currBlob);
-        cont += Utils.readContentsAsString(currF);
+        cont += currCont;
         cont += "=======\n";
-        File givenF = join(blobs, givenBlob);
-        cont += Utils.readContentsAsString(givenF);
+        cont += givenCont;
         cont += ">>>>>>>\n";
 
         File merged = join(CWD, fileName);
