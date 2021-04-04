@@ -40,8 +40,8 @@ public class Repository {
 
     public static void init() {
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system " +
-                    "already exists in the current directory.");
+            System.out.println("A Gitlet version-control system "
+                    + "already exists in the current directory.");
             System.exit(0);
         } else {
             GITLET_DIR.mkdir();
@@ -339,8 +339,8 @@ public class Repository {
 
         for (String f : Utils.plainFilenamesIn(CWD)) {
             if (!currentCommit.getFilesMap().containsKey(f) && checkoutFiles.containsKey(f)) {
-                System.out.println("There is an untracked file in the way; " +
-                        "delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 System.exit(0);
             }
             if (currentCommit.getFilesMap().containsKey(f) && !checkoutFiles.containsKey(f)) {
@@ -439,8 +439,8 @@ public class Repository {
 
         for (String f : Utils.plainFilenamesIn(CWD)) {
             if (!current.getFilesMap().containsKey(f) && given.getFilesMap().containsKey(f)) {
-                System.out.println("There is an untracked file in the way; " +
-                        "delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -486,12 +486,15 @@ public class Repository {
         }
 
 
+        // files modified at given but unmodified at current are changed to given version and added.
         for (String f : modifiedInGiven) {
             if (currentFiles.containsKey(f) && !modifiedInCurrent.contains(f)) {
                 checkoutFile(given.getID(), f);
+                add(f);
             }
         }
 
+        // files absent at split and only present at given are checked out and added.
         for (String f : givenFiles.keySet()) {
             if (!splitFiles.containsKey(f) && !currentFiles.containsKey(f)) {
                 checkoutFile(given.getID(), f);
@@ -499,6 +502,7 @@ public class Repository {
             }
         }
 
+        // files present at split, unmodified at current, and absent at given are removed (untracked).
         for (String f : splitFiles.keySet()) {
             if (!modifiedInCurrent.contains(f) && !givenFiles.containsKey(f)) {
                 rm(f);
