@@ -516,9 +516,10 @@ public class Repository {
             }
         }
 
-        current.saveMergeParent(given.getID());
-
         commit("Merged " + branchName + " into " + currBranch() + ".");
+        Commit mergedCommit = currCommit();
+        mergedCommit.saveMergeParent(given.getID());
+
         if (inConflict) {
             System.out.println("Encountered a merge conflict.");
         }
