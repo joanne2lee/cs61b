@@ -8,13 +8,11 @@ import static gitlet.Utils.*;
 
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
- *  does at a high level.
+ *
  *
  *  @author Joanne Lee
  */
 public class Repository {
-
 
     /** The current working directory. */
     static final File CWD = new File(System.getProperty("user.dir"));
@@ -40,11 +38,10 @@ public class Repository {
 
 
 
-
-
     public static void init() {
         if (GITLET_DIR.exists()) {
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.println("A Gitlet version-control system " +
+                    "already exists in the current directory.");
             System.exit(0);
         } else {
             GITLET_DIR.mkdir();
@@ -84,7 +81,6 @@ public class Repository {
         branches.put(currBranch(), initialCommit.getID());
         Utils.writeObject(branchesFile, branches);
     }
-
 
 
     public static void add(String fileName) {
@@ -130,7 +126,6 @@ public class Repository {
     }
 
 
-
     public static void commit(String message) {
         if (message.equals("")) {
             System.out.println("Please enter a commit message.");
@@ -158,7 +153,6 @@ public class Repository {
         sa.clear();
         sa.save(stagingFile);
 
-
         Commit newCommit = new Commit(commitFiles, message, parentCommit.getID());
 
         // save commit to commits folder
@@ -171,7 +165,6 @@ public class Repository {
         Utils.writeObject(branchesFile, branches);
 
     }
-
 
 
     public static void rm(String fileName) {
@@ -195,7 +188,6 @@ public class Repository {
     }
 
 
-
     public static void log() {
         Commit c = currCommit();
         while (c != null) {
@@ -204,11 +196,9 @@ public class Repository {
             System.out.println("Date: " + c.getDate());
             System.out.println(c.getMessage());
             System.out.println();
-
             if (c.getParent() == null) {
                 return;
             }
-
             // the next commit to print is the current commit's parent
             c = getCommit(c.getParent());
         }
@@ -216,11 +206,9 @@ public class Repository {
 
     public static void globalLog() {
         List<String> commitList = Utils.plainFilenamesIn(commits);
-
         for (String commit : commitList) {
             File commitFile = join(commits, commit);
             Commit c = Utils.readObject(commitFile, Commit.class);
-
             System.out.println("===");
             System.out.println("commit " + c.getID());
             System.out.println("Date: " + c.getDate());
@@ -253,7 +241,7 @@ public class Repository {
     public static void status() {
         StagingArea sa = currStagingArea();
 
-        // branches
+        // display branches
         System.out.println("=== Branches ===");
         HashMap<String, String> b = Utils.readObject(branchesFile, HashMap.class);
         ArrayList<String> branches = new ArrayList(b.keySet());
@@ -267,14 +255,14 @@ public class Repository {
         }
         System.out.println();
 
-        // files staged for addition
+        // display files staged for addition
         System.out.println("=== Staged Files ===");
         for (String f : sa.filesToAdd().keySet()) {
             System.out.println(f);
         }
         System.out.println();
 
-        // files staged for removal
+        // display files staged for removal
         System.out.println("=== Removed Files ===");
         for (String f : sa.filesToRemove()) {
             System.out.println(f);
@@ -291,8 +279,6 @@ public class Repository {
     }
 
 
-
-
     public static void checkoutFile(String fileName) {
         Commit c = currCommit();
         HashMap<String, String> cFilesMap = c.getFilesMap();
@@ -302,12 +288,9 @@ public class Repository {
         }
         File f = join(blobs, cFilesMap.get(fileName));
         byte[] b = readContents(f);
-
         File workingFile = join(CWD, fileName);
         Utils.writeContents(workingFile, b);
-
     }
-
 
     public static void checkoutFile(String commitID, String fileName) {
         File commitFile = join(commits, commitID);
@@ -325,10 +308,7 @@ public class Repository {
         byte[] b = readContents(f);
         File workingFile = join(CWD, fileName);
         Utils.writeContents(workingFile, b);
-
     }
-
-
 
     public static void checkoutBranch(String branchName) {
         StagingArea sa = currStagingArea();
@@ -347,10 +327,10 @@ public class Repository {
         HashMap<String, String> checkoutFiles = checkoutCommit.getFilesMap();
         Commit currentCommit = currCommit();
 
-
         for (String f : Utils.plainFilenamesIn(CWD)) {
             if (!currentCommit.getFilesMap().containsKey(f) && checkoutFiles.containsKey(f)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
                 System.exit(0);
             }
             if (currentCommit.getFilesMap().containsKey(f) && !checkoutFiles.containsKey(f)) {
@@ -364,15 +344,14 @@ public class Repository {
             File blobFile = join(blobs, blobID);
             byte[] blob = readContents(blobFile);
             Utils.writeContents(workingFile, blob);
-
         }
 
         Utils.writeContents(HEAD, branchName);
 
         sa.clear();
         sa.save(stagingFile);
-
     }
+
 
     public static void branch(String branchName) {
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
@@ -397,7 +376,6 @@ public class Repository {
         branches.remove(branchName);
         Utils.writeObject(branchesFile, branches);
     }
-
 
 
     public static void reset(String commitID) {
@@ -451,7 +429,8 @@ public class Repository {
 
         for (String f : Utils.plainFilenamesIn(CWD)) {
             if (!current.getFilesMap().containsKey(f) && given.getFilesMap().containsKey(f)) {
-                System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
                 System.exit(0);
             }
         }
@@ -518,8 +497,6 @@ public class Repository {
 
         boolean inConflict = false;
 
-
-
         // CONFLICT IF:
         // file was present at split point and
             // file modified differently at both branches,
@@ -537,7 +514,6 @@ public class Repository {
                 mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
             }
         }
-
         // file was absent at split point and has different versions at branches
         for (String f : currentFiles.keySet()) {
             if (givenFiles.containsKey(f) && !splitFiles.containsKey(f)) {
@@ -547,6 +523,7 @@ public class Repository {
                 }
             }
         }
+
         commit("Merged " + branchName + " into " + currBranch() + ".");
         if (inConflict) {
             System.out.println("Encountered a merge conflict.");
@@ -556,7 +533,6 @@ public class Repository {
 
     private static void mergeHelper(String fileName, String currBlob, String givenBlob) {
         String cont = "<<<<<<< HEAD\n";
-
         if (currBlob == null) {
             cont += "";
         } else {
@@ -564,14 +540,12 @@ public class Repository {
             cont += Utils.readContentsAsString(currF);
         }
         cont += "=======\n";
-
         if (givenBlob == null) {
             cont += "";
         } else {
             File givenF = join(blobs, givenBlob);
             cont += Utils.readContentsAsString(givenF);
         }
-
         cont += ">>>>>>>\n";
 
         File merged = join(CWD, fileName);
@@ -579,9 +553,7 @@ public class Repository {
     }
 
 
-
     private static String findSplitPoint(String givenHead) {
-
         ArrayList<String> givenAncestors = new ArrayList<>();
 
         ArrayDeque<String> gQueue = new ArrayDeque<>();

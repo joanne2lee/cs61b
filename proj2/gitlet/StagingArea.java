@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.io.File;
 
-
+/** Represents a gitlet staging area.
+ *
+ *
+ *  @author Joanne Lee
+ */
 public class StagingArea implements Serializable {
 
     private HashMap<String, String> stagedForAddition;
