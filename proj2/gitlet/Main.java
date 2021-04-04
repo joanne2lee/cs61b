@@ -1,6 +1,8 @@
 package gitlet;
 
 
+import java.io.File;
+
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author Joanne Lee
  */
@@ -12,6 +14,11 @@ public class Main {
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
+            System.exit(0);
+        }
+        File gitlet = new File(".gitlet");
+        if (!args[0].equals("init") && !gitlet.exists()) {
+            System.out.println("Not in an initialized Gitlet directory.");
             System.exit(0);
         }
 
@@ -99,6 +106,7 @@ public class Main {
                 System.exit(0);
         }
     }
+
 
 
     public static void validateNumArgs(String[] args, int n) {
