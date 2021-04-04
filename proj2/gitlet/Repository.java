@@ -525,19 +525,16 @@ public class Repository {
             // file modified differently at both branches,
             // file modified at one branch and deleted at other
         for (String f : splitFiles.keySet()) {
-            File currFile = join(blobs, currentFiles.get(f));
-            File givenFile = join(blobs, givenFiles.get(f));
-
             if (modifiedInCurrent.contains(f) && modifiedInGiven.contains(f)
                 && !givenFiles.get(f).equals(currentFiles.get(f))) {
                 inConflict = true;
-                mergeHelper(f, Utils.readContentsAsString(currFile), Utils.readContentsAsString(givenFile));
+                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
             } else if (modifiedInCurrent.contains(f) && !givenFiles.containsKey(f)) {
                 inConflict = true;
-                mergeHelper(f, Utils.readContentsAsString(currFile), "");
+                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
             } else if (modifiedInGiven.contains(f) && !currentFiles.containsKey(f)) {
                 inConflict = true;
-                mergeHelper(f, "", Utils.readContentsAsString(givenFile));
+                mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
             }
         }
 
@@ -557,11 +554,24 @@ public class Repository {
     }
 
 
-    private static void mergeHelper(String fileName, String currCont, String givenCont) {
+    private static void mergeHelper(String fileName, String currBlob, String givenBlob) {
         String cont = "<<<<<<< HEAD\n";
-        cont += currCont;
+
+        if (currBlob == null) {
+            cont += "";
+        } else {
+            File currF = join(blobs, currBlob);
+            cont += Utils.readContentsAsString(currF);
+        }
         cont += "=======\n";
-        cont += givenCont;
+
+        if (givenBlob == null) {
+            cont += "";
+        } else {
+            File givenF = join(blobs, givenBlob);
+            cont += Utils.readContentsAsString(givenF);
+        }
+
         cont += ">>>>>>>\n";
 
         File merged = join(CWD, fileName);
