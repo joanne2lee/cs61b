@@ -504,7 +504,8 @@ public class Repository {
 
         // files present at split, unmodified at current, and absent at given are removed (untracked).
         for (String f : splitFiles.keySet()) {
-            if (!modifiedInCurrent.contains(f) && !givenFiles.containsKey(f)) {
+            if (currentFiles.containsKey(f) && !modifiedInCurrent.contains(f)
+                    && !givenFiles.containsKey(f)) {
                 rm(f);
             }
         }
