@@ -581,32 +581,36 @@ public class Repository {
 
 
     private static String findSplitPoint(String givenHead) {
-        String commit1 = currCommit().getID();
-        String commit2 = givenHead;
-        ArrayDeque<String> fringe1 = new ArrayDeque<>();
-        ArrayDeque<String> fringe2 = new ArrayDeque<>();
 
-        fringe1.addLast(commit1);
-        fringe2.addLast(commit2);
-        while (!fringe1.isEmpty() && !fringe2.isEmpty()) {
-            String s1 = fringe1.removeFirst();
-            String s2 = fringe2.removeFirst();
-            if (s1.equals(s2)) {
-                return s2;
+        ArrayList<String> givenAncestors = new ArrayList<>();
+
+        ArrayDeque<String> gQueue = new ArrayDeque<>();
+        gQueue.addLast(givenHead);
+        while (!gQueue.isEmpty()) {
+            String gCommit = gQueue.removeFirst();
+            givenAncestors.add(gCommit);
+            Commit c = getCommit(gCommit);
+            if (c.getParent() != null) {
+                gQueue.addLast(c.getParent());
             }
-            Commit c1 = getCommit(s1);
-            Commit c2 = getCommit(s2);
-            if (c1.getParent() != null) {
-                fringe1.addLast(c1.getParent());
+            if (c.secondParent() != null) {
+                gQueue.addLast(c.secondParent());
             }
-            if (c1.secondParent() != null) {
-                fringe1.addLast(c1.secondParent());
+        }
+
+        ArrayDeque<String> cQueue = new ArrayDeque<>();
+        cQueue.addLast(currCommit().getID());
+        while (!cQueue.isEmpty()) {
+            String cCommit = cQueue.removeFirst();
+            if (givenAncestors.contains(cCommit)) {
+                return cCommit;
             }
-            if (c2.getParent() != null) {
-                fringe2.addLast(c2.getParent());
+            Commit c = getCommit(cCommit);
+            if (c.getParent() != null) {
+                cQueue.addLast(c.getParent());
             }
-            if (c2.secondParent() != null) {
-                fringe2.addLast(c2.secondParent());
+            if (c.secondParent() != null) {
+                cQueue.addLast(c.secondParent());
             }
         }
         return null;
