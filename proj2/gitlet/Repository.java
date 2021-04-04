@@ -2,10 +2,7 @@ package gitlet;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static gitlet.Utils.*;
 
@@ -213,8 +210,7 @@ public class Repository {
             }
 
             // the next commit to print is the current commit's parent
-            File f = join(commits, c.getParent());
-            c = Utils.readObject(f, Commit.class);
+            c = getCommit(c.getParent());
         }
     }
 
@@ -347,8 +343,7 @@ public class Repository {
             System.exit(0);
         }
 
-        File c = join(commits, branches.get(branchName));
-        Commit checkoutCommit = Utils.readObject(c, Commit.class);
+        Commit checkoutCommit = getCommit(branches.get(branchName));
         HashMap<String, String> checkoutFiles = checkoutCommit.getFilesMap();
         Commit currentCommit = currCommit();
 
@@ -434,14 +429,8 @@ public class Repository {
 
     public static void merge(String branchName) {
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
-
-        File g = join(commits, branches.get(branchName));
-        Commit given = Utils.readObject(g, Commit.class);
-
-        Commit current = currCommit();
-
-
         StagingArea sa = currStagingArea();
+
         if (!sa.filesToAdd().isEmpty() || !sa.filesToRemove().isEmpty()) {
             System.out.println("You have uncommitted changes.");
             System.exit(0);
@@ -455,6 +444,11 @@ public class Repository {
             System.exit(0);
         }
 
+        File givenF = join(commits, branches.get(branchName));
+        Commit given = Utils.readObject(givenF, Commit.class);
+
+        Commit current = currCommit();
+
         for (String f : Utils.plainFilenamesIn(CWD)) {
             if (!current.getFilesMap().containsKey(f) && given.getFilesMap().containsKey(f)) {
                 System.out.println("There is an untracked file in the way; delete it, or add and commit it first.");
@@ -462,7 +456,10 @@ public class Repository {
             }
         }
 
-        Commit splitPoint = findSplitPoint(given);
+        // the split point of the two branches
+        String sp = findSplitPoint(given.getID());
+        File spF = join(commits, sp);
+        Commit splitPoint = Utils.readObject(spF, Commit.class);
 
         if (splitPoint.getID().equals(given.getID())) {
             System.out.println("Given branch is an ancestor of the current branch.");
@@ -572,20 +569,36 @@ public class Repository {
 
 
 
-    private static Commit findSplitPoint(Commit branchHead) {
-        Commit commit1 = currCommit();
-        Commit commit2 = branchHead;
+    private static String findSplitPoint(String givenHead) {
+        String commit1 = currCommit().getID();
+        String commit2 = givenHead;
+        ArrayDeque<String> fringe1 = new ArrayDeque<>();
+        ArrayDeque<String> fringe2 = new ArrayDeque<>();
 
-        while (commit1 != null) {
-            while (commit2 != null) {
-                if (commit2.getID().equals(commit1.getID())) {
-                    return commit2;
+        fringe1.addLast(commit1);
+        fringe2.addLast(commit2);
+        while (!fringe1.isEmpty()) {
+            String s1 = fringe1.removeFirst();
+            while (!fringe2.isEmpty()) {
+                String s2 = fringe2.removeFirst();
+                if (s1.equals(s2)) {
+                    return s2;
                 }
-                File parent2 = join(commits, commit2.getParent());
-                commit2 = Utils.readObject(parent2, Commit.class);
+                Commit c2 = getCommit(s2);
+                if (c2.getParent() != null) {
+                    fringe1.addLast(c2.getParent());
+                }
+                if (c2.secondParent() != null) {
+                    fringe1.addLast(c2.secondParent());
+                }
             }
-            File parent1 = join(commits, commit1.getParent());
-            commit1 = Utils.readObject(parent1, Commit.class);
+            Commit c1 = getCommit(s1);
+            if (c1.getParent() != null) {
+                fringe1.addLast(c1.getParent());
+            }
+            if (c1.secondParent() != null) {
+                fringe1.addLast(c1.secondParent());
+            }
         }
         return null;
     }
@@ -593,9 +606,11 @@ public class Repository {
 
 
 
-
-
-
+    private static Commit getCommit(String commitID) {
+        File commitFile = join(commits, commitID);
+        Commit commit = Utils.readObject(commitFile, Commit.class);
+        return commit;
+    }
 
 
     private static StagingArea currStagingArea() {
@@ -604,14 +619,14 @@ public class Repository {
 
     private static Commit currCommit() {
         String headBranch = currBranch();
-        HashMap<String, String> b = Utils.readObject(branchesFile, HashMap.class);
-        String headCommit = b.get(headBranch);
-        File f = join(commits, headCommit);
-        return Utils.readObject(f, Commit.class);
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        String headCommit = branches.get(headBranch);
+        return getCommit(headCommit);
     }
-
 
     private static String currBranch() {
         return readContentsAsString(HEAD);
     }
 }
+
+

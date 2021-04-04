@@ -28,11 +28,14 @@ public class Commit implements Serializable {
     /** The message of this Commit. */
     private final String message;
 
-    /** The SHA-1 hash of the parent of this Commit. */
+    /** The SHA-1 hash of the (first) parent of this Commit. */
     private final String parentID;
 
     /** The timestamp of this Commit. */
     private final String timestamp;
+
+    /** The second parent of this Commit (if merge commit). */
+    private final String secondParent;
 
 
 
@@ -40,6 +43,7 @@ public class Commit implements Serializable {
         this.filesMap = filesMap;
         this.message = message;
         this.parentID = parentID;
+        this.secondParent = null;
 
 
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z");
@@ -78,5 +82,7 @@ public class Commit implements Serializable {
     public String getParent() {
         return this.parentID;
     }
+
+    public String secondParent() { return this.secondParent; }
 
 }
