@@ -35,7 +35,7 @@ public class Commit implements Serializable {
     private final String timestamp;
 
     /** The second parent of this Commit (if merge commit). */
-    private final String secondParent;
+    private String secondParent;
 
 
 
@@ -84,6 +84,10 @@ public class Commit implements Serializable {
     }
 
     public String secondParent() { return this.secondParent; }
+
+    public void saveMergeParent(String givenParent) {
+        this.secondParent = givenParent;
+    }
 
 
 }

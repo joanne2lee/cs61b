@@ -416,34 +416,12 @@ public class Repository {
 
 
     public static void merge(String branchName) {
+        mergeChecker(branchName);
+
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
-        StagingArea sa = currStagingArea();
-
-        if (!sa.filesToAdd().isEmpty() || !sa.filesToRemove().isEmpty()) {
-            System.out.println("You have uncommitted changes.");
-            System.exit(0);
-        }
-        if (!branches.containsKey(branchName)) {
-            System.out.println("A branch with that name does not exist.");
-            System.exit(0);
-        }
-        if (currBranch().equals(branchName)) {
-            System.out.println("Cannot merge a branch with itself.");
-            System.exit(0);
-        }
-
         File givenF = join(commits, branches.get(branchName));
         Commit given = Utils.readObject(givenF, Commit.class);
-
         Commit current = currCommit();
-
-        for (String f : Utils.plainFilenamesIn(CWD)) {
-            if (!current.getFilesMap().containsKey(f) && given.getFilesMap().containsKey(f)) {
-                System.out.println("There is an untracked file in the way; "
-                        + "delete it, or add and commit it first.");
-                System.exit(0);
-            }
-        }
 
         // the split point of the two branches
         String sp = findSplitPoint(given.getID());
@@ -485,7 +463,6 @@ public class Repository {
             }
         }
 
-
         // files modified at given but unmodified at current are changed to given version and added.
         for (String f : modifiedInGiven) {
             if (currentFiles.containsKey(f) && !modifiedInCurrent.contains(f)) {
@@ -502,7 +479,7 @@ public class Repository {
             }
         }
 
-        // files present at split, unmodified at current, and absent at given are removed (untracked).
+        // files present at split, unmodified at current, and absent at given are removed/untracked.
         for (String f : splitFiles.keySet()) {
             if (currentFiles.containsKey(f) && !modifiedInCurrent.contains(f)
                     && !givenFiles.containsKey(f)) {
@@ -539,9 +516,42 @@ public class Repository {
             }
         }
 
+        current.saveMergeParent(given.getID());
+
         commit("Merged " + branchName + " into " + currBranch() + ".");
         if (inConflict) {
             System.out.println("Encountered a merge conflict.");
+        }
+    }
+
+
+
+    private static void mergeChecker(String mergeBranch) {
+        HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
+        StagingArea sa = currStagingArea();
+
+        if (!sa.filesToAdd().isEmpty() || !sa.filesToRemove().isEmpty()) {
+            System.out.println("You have uncommitted changes.");
+            System.exit(0);
+        }
+        if (!branches.containsKey(mergeBranch)) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        if (currBranch().equals(mergeBranch)) {
+            System.out.println("Cannot merge a branch with itself.");
+            System.exit(0);
+        }
+
+        Commit given = getCommit(branches.get(mergeBranch));
+        Commit current = currCommit();
+
+        for (String f : Utils.plainFilenamesIn(CWD)) {
+            if (!current.getFilesMap().containsKey(f) && given.getFilesMap().containsKey(f)) {
+                System.out.println("There is an untracked file in the way; "
+                        + "delete it, or add and commit it first.");
+                System.exit(0);
+            }
         }
     }
 
@@ -627,6 +637,7 @@ public class Repository {
     private static String currBranch() {
         return readContentsAsString(HEAD);
     }
+
 }
 
 
