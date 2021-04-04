@@ -293,6 +293,16 @@ public class Repository {
     }
 
     public static void checkoutFile(String commitID, String fileName) {
+        // allow for abbreviated commits
+        if (commitID.length() < 40) {
+            List<String> commitList = Utils.plainFilenamesIn(commits);
+            for (String c : commitList) {
+                if (c.startsWith(commitID)) {
+                    commitID = c;
+                }
+            }
+        }
+
         File commitFile = join(commits, commitID);
         if (!commitFile.exists()) {
             System.out.println("No commit with that id exists.");
