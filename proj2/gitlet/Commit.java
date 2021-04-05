@@ -39,11 +39,11 @@ public class Commit implements Serializable {
 
 
 
-    public Commit(HashMap<String, String> filesMap, String message, String parentID, String secondParent) {
+    public Commit(HashMap<String, String> filesMap, String message, String parentID, String p2) {
         this.filesMap = filesMap;
         this.message = message;
         this.parentID = parentID;
-        this.secondParent = secondParent;
+        this.secondParent = p2;
 
 
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z");

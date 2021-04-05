@@ -419,19 +419,14 @@ public class Repository {
         mergeChecker(branchName);
 
         HashMap<String, String> branches = Utils.readObject(branchesFile, HashMap.class);
-        File givenF = join(commits, branches.get(branchName));
-        Commit given = Utils.readObject(givenF, Commit.class);
         Commit current = currCommit();
-
-        String sp = findSplitPoint(given.getID());
-        File spF = join(commits, sp);
-        Commit splitPoint = Utils.readObject(spF, Commit.class);
+        Commit given = getCommit(branches.get(branchName));
+        Commit splitPoint = getCommit(findSplitPoint(given.getID()));
 
         if (splitPoint.getID().equals(given.getID())) {
             System.out.println("Given branch is an ancestor of the current branch.");
             return;
         }
-
         if (splitPoint.getID().equals(current.getID())) {
             checkoutBranch(branchName);
             System.out.println("Current branch fast-forwarded.");
@@ -452,7 +447,6 @@ public class Repository {
                 add(f);
             }
         }
-
         // files absent at split and only present at given are checked out and added.
         for (String f : givenFiles.keySet()) {
             if (!splitFiles.containsKey(f) && !currentFiles.containsKey(f)) {
@@ -460,7 +454,6 @@ public class Repository {
                 add(f);
             }
         }
-
         // files present at split, unmodified at current, and absent at given are removed/untracked.
         for (String f : splitFiles.keySet()) {
             if (currentFiles.containsKey(f) && !modifiedInCurrent.contains(f)
@@ -496,7 +489,6 @@ public class Repository {
         }
 
         commit("Merged " + branchName + " into " + currBranch() + ".", given.getID());
-
         if (inConflict) {
             System.out.println("Encountered a merge conflict.");
         }
@@ -571,8 +563,8 @@ public class Repository {
 
     // returns list of files that have been modified in the branch since the split point
     private static ArrayList<String> modifiedList(Commit splitPoint, Commit branchHead) {
-        HashMap<String,String> splitFiles = splitPoint.getFilesMap();
-        HashMap<String,String> branchFiles = branchHead.getFilesMap();
+        HashMap<String, String> splitFiles = splitPoint.getFilesMap();
+        HashMap<String, String> branchFiles = branchHead.getFilesMap();
         ArrayList<String> modified = new ArrayList<>();
         for (String f : splitFiles.keySet()) {
             if (branchFiles.containsKey(f)) {
