@@ -69,7 +69,7 @@ public class Repository {
         Utils.writeObject(stagingFile, sa);
 
         // create initial commit
-        Commit initialCommit = new Commit(new HashMap<>(), "initial commit", null);
+        Commit initialCommit = new Commit(new HashMap<>(), "initial commit", null, null);
         File commitFile = join(commits, initialCommit.getID());
         Utils.writeObject(commitFile, initialCommit);
 
@@ -126,7 +126,7 @@ public class Repository {
     }
 
 
-    public static void commit(String message) {
+    public static void commit(String message, String secondParent) {
         if (message.equals("")) {
             System.out.println("Please enter a commit message.");
             System.exit(0);
@@ -153,7 +153,7 @@ public class Repository {
         sa.clear();
         sa.save(stagingFile);
 
-        Commit newCommit = new Commit(commitFiles, message, parentCommit.getID());
+        Commit newCommit = new Commit(commitFiles, message, parentCommit.getID(), secondParent);
 
         // save commit to commits folder
         File commitFile = join(commits, newCommit.getID());
@@ -423,7 +423,6 @@ public class Repository {
         Commit given = Utils.readObject(givenF, Commit.class);
         Commit current = currCommit();
 
-        // the split point of the two branches
         String sp = findSplitPoint(given.getID());
         File spF = join(commits, sp);
         Commit splitPoint = Utils.readObject(spF, Commit.class);
@@ -443,25 +442,8 @@ public class Repository {
         HashMap<String, String> givenFiles = given.getFilesMap();
         HashMap<String, String> splitFiles = splitPoint.getFilesMap();
 
-        // files that have been modified in the given branch since the split point
-        ArrayList<String> modifiedInGiven = new ArrayList<>();
-        for (String f : splitFiles.keySet()) {
-            if (givenFiles.containsKey(f)) {
-                if (!givenFiles.get(f).equals(splitFiles.get(f))) {
-                    modifiedInGiven.add(f);
-                }
-            }
-        }
-
-        // files that have been modified in the current branch since the split point
-        ArrayList<String> modifiedInCurrent = new ArrayList<>();
-        for (String f : splitFiles.keySet()) {
-            if (currentFiles.containsKey(f)) {
-                if (!currentFiles.get(f).equals(splitFiles.get(f))) {
-                    modifiedInCurrent.add(f);
-                }
-            }
-        }
+        ArrayList<String> modifiedInGiven = modifiedList(splitPoint, given);
+        ArrayList<String> modifiedInCurrent = modifiedList(splitPoint, current);
 
         // files modified at given but unmodified at current are changed to given version and added.
         for (String f : modifiedInGiven) {
@@ -489,10 +471,7 @@ public class Repository {
 
         boolean inConflict = false;
 
-        // CONFLICT IF:
-        // file was present at split point and
-            // file modified differently at both branches,
-            // file modified at one branch and deleted at other
+        // file present at split point & modified differently at both branches / modified at one, deleted at other
         for (String f : splitFiles.keySet()) {
             if (modifiedInCurrent.contains(f) && modifiedInGiven.contains(f)
                 && !givenFiles.get(f).equals(currentFiles.get(f))) {
@@ -506,7 +485,7 @@ public class Repository {
                 mergeHelper(f, currentFiles.get(f), givenFiles.get(f));
             }
         }
-        // file was absent at split point and has different versions at branches
+        // file absent at split point & different versions at branches
         for (String f : currentFiles.keySet()) {
             if (givenFiles.containsKey(f) && !splitFiles.containsKey(f)) {
                 if (!currentFiles.get(f).equals(givenFiles.get(f))) {
@@ -516,15 +495,12 @@ public class Repository {
             }
         }
 
-        commit("Merged " + branchName + " into " + currBranch() + ".");
-        Commit mergedCommit = currCommit();
-        mergedCommit.saveMergeParent(given.getID());
+        commit("Merged " + branchName + " into " + currBranch() + ".", given.getID());
 
         if (inConflict) {
             System.out.println("Encountered a merge conflict.");
         }
     }
-
 
 
     private static void mergeChecker(String mergeBranch) {
@@ -554,28 +530,6 @@ public class Repository {
                 System.exit(0);
             }
         }
-    }
-
-
-    private static void mergeHelper(String fileName, String currBlob, String givenBlob) {
-        String cont = "<<<<<<< HEAD\n";
-        if (currBlob == null) {
-            cont += "";
-        } else {
-            File currF = join(blobs, currBlob);
-            cont += Utils.readContentsAsString(currF);
-        }
-        cont += "=======\n";
-        if (givenBlob == null) {
-            cont += "";
-        } else {
-            File givenF = join(blobs, givenBlob);
-            cont += Utils.readContentsAsString(givenF);
-        }
-        cont += ">>>>>>>\n";
-
-        File merged = join(CWD, fileName);
-        Utils.writeContents(merged, cont);
     }
 
 
@@ -612,6 +566,43 @@ public class Repository {
             }
         }
         return null;
+    }
+
+
+    // returns list of files that have been modified in the branch since the split point
+    private static ArrayList<String> modifiedList(Commit splitPoint, Commit branchHead) {
+        HashMap<String,String> splitFiles = splitPoint.getFilesMap();
+        HashMap<String,String> branchFiles = branchHead.getFilesMap();
+        ArrayList<String> modified = new ArrayList<>();
+        for (String f : splitFiles.keySet()) {
+            if (branchFiles.containsKey(f)) {
+                if (!branchFiles.get(f).equals(splitFiles.get(f))) {
+                    modified.add(f);
+                }
+            }
+        }
+        return modified;
+    }
+
+    private static void mergeHelper(String fileName, String currBlob, String givenBlob) {
+        String cont = "<<<<<<< HEAD\n";
+        if (currBlob == null) {
+            cont += "";
+        } else {
+            File currF = join(blobs, currBlob);
+            cont += Utils.readContentsAsString(currF);
+        }
+        cont += "=======\n";
+        if (givenBlob == null) {
+            cont += "";
+        } else {
+            File givenF = join(blobs, givenBlob);
+            cont += Utils.readContentsAsString(givenF);
+        }
+        cont += ">>>>>>>\n";
+
+        File merged = join(CWD, fileName);
+        Utils.writeContents(merged, cont);
     }
 
 

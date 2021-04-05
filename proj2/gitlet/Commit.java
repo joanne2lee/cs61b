@@ -35,15 +35,15 @@ public class Commit implements Serializable {
     private final String timestamp;
 
     /** The second parent of this Commit (if merge commit). */
-    private String secondParent;
+    private final String secondParent;
 
 
 
-    public Commit(HashMap<String, String> filesMap, String message, String parentID) {
+    public Commit(HashMap<String, String> filesMap, String message, String parentID, String secondParent) {
         this.filesMap = filesMap;
         this.message = message;
         this.parentID = parentID;
-        this.secondParent = null;
+        this.secondParent = secondParent;
 
 
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z");
@@ -83,11 +83,10 @@ public class Commit implements Serializable {
         return this.parentID;
     }
 
-    public String secondParent() { return this.secondParent; }
-
-    public void saveMergeParent(String givenParent) {
-        this.secondParent = givenParent;
+    public String secondParent() {
+        return this.secondParent;
     }
+
 
 
 }

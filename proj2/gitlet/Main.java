@@ -35,7 +35,7 @@ public class Main {
             case "commit":
                 validateNumArgs(args, 2);
                 String message = args[1];
-                Repository.commit(message);
+                Repository.commit(message, null);
                 break;
             case "rm":
                 validateNumArgs(args, 2);
