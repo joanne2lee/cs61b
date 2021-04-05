@@ -270,47 +270,11 @@ public class Repository {
         System.out.println();
 
 
-       HashMap<String, String> currFiles = currCommit().getFilesMap();
-       List<String> workFiles = plainFilenamesIn(CWD);
-
-
         System.out.println("=== Modifications Not Staged For Commit ===");
-        ArrayList<String> modNotStaged = new ArrayList<>();
-        for (String f : workFiles) {
-            File temp = join(CWD, f);
-            String workBlob = Utils.sha1(Utils.readContents(temp));
-            if (currFiles.containsKey(f) && !currFiles.get(f).equals(workBlob)
-                    && !sa.filesToAdd().containsKey(f)) {
-                modNotStaged.add(f);
-            } else if (sa.filesToAdd().containsKey(f)
-                    && !sa.filesToAdd().get(f).equals(workBlob)) {
-                modNotStaged.add(f);
-            }
-        }
-        for (String f : sa.filesToAdd().keySet()) {
-            if (!workFiles.contains(f)) {
-                modNotStaged.add(f);
-            }
-        }
-        for (String f : currFiles.keySet()) {
-            if (!sa.filesToRemove().contains(f) && !workFiles.contains(f)) {
-                modNotStaged.add(f);
-            }
-        }
-        Collections.sort(modNotStaged);
-        for (String f : modNotStaged) {
-            System.out.println(f);
-        }
         System.out.println();
 
         System.out.println("=== Untracked Files ===");
-        for (String f : workFiles) {
-            if (!currFiles.containsKey(f) && !sa.filesToAdd().containsKey(f)) {
-                System.out.println(f);
-            }
-        }
         System.out.println();
-
     }
 
 
