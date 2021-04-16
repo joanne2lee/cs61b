@@ -47,8 +47,6 @@ public class Engine {
     }
 
     public static TETile[][] generateWorld(Random random) {
-        TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
         TETile[][] world = initializeTiles();
         Position p = new byow.Core.Engine.Position(RandomUtils.uniform(random,
                 WIDTH / 2 - 5, WIDTH / 2 + 5), RandomUtils.uniform(random,
