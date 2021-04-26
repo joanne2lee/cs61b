@@ -3,20 +3,34 @@ package byow.Core;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
+import edu.princeton.cs.introcs.StdAudio;
+import edu.princeton.cs.introcs.StdDraw;
 
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import java.io.File;
+
+import java.awt.*;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
+
 
 public class Engine {
     TERenderer ter = new TERenderer();
     /* Feel free to change the width and height. */
     public static final int WIDTH = 100;
     public static final int HEIGHT = 50;
+    public static final ArrayList<Room> rooms = new ArrayList<>();
+    public Player p1;
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+
+        mainMenu();
     }
 
     /**
@@ -41,26 +55,313 @@ public class Engine {
      * @return the 2D TETile[][] representing the state of the world
      */
     public TETile[][] interactWithInputString(String input) {
-        long seed = Long.parseLong(input.substring(1, input.length() - 1));
-        Random random = new Random(seed);
-        return generateWorld(random);
+        input = input.toUpperCase();
+        TETile[][] world = null;
+
+        if (input.charAt(0) == 'N') {
+            int endOfSeed = input.indexOf('S');
+            Long seed = Long.parseLong(input.substring(1, endOfSeed));
+            Random r = new Random(seed);
+            world = generateWorld(r);
+            saveSeed(input.substring(1, endOfSeed));
+            Room start = rooms.get(0);
+            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width), start.p.y + RandomUtils.uniform(r, start.height));
+            p1 = new Player(startingPosition, Tileset.AVATAR, world);
+            char[] moves = input.substring(endOfSeed + 1).toCharArray();
+            for (char m : moves) {
+                if (m == ':') {
+                    break;
+                }
+                p1.move(m, world);
+            }
+            savePosition(p1.position);
+
+        } else if (input.charAt(0) == 'L') {
+            world = loadWorld();
+            Player p1 = loadPlayer(world);
+            char[] moves = input.substring(1).toCharArray();
+            for (char m : moves) {
+                if (m == ':') {
+                    break;
+                }
+                p1.move(m, world);
+            }
+            savePosition(p1.position);
+        }
+        return world;
     }
 
+    public void saveSeed(String seed) {
+        File savedWorld = new File("./savedWorld.txt");
+        if (!savedWorld.exists()) {
+            try {
+                savedWorld.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Utils.writeContents(savedWorld, seed);
+    }
+
+
+    public void savePosition(Position pos) {
+        File savedPosition = new File("./savedPosition.txt");
+        if (!savedPosition.exists()) {
+            try {
+                savedPosition.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Utils.writeObject(savedPosition, pos);
+    }
+
+    public TETile[][] loadWorld() {
+        File savedWorld = new File("./savedWorld.txt");
+        if (!savedWorld.exists()) {
+            System.exit(0);
+        }
+        String seed = Utils.readContentsAsString(savedWorld);
+        Long s = Long.parseLong(seed);
+        Random r = new Random(s);
+        TETile[][] world = generateWorld(r);
+        return world;
+    }
+
+    public static void main(String[] args) {
+        Engine e = new Engine();
+        e.interactWithKeyboard();
+    }
+
+    /** New game option, with ability to enter seed. */
+    public void newGame() {
+        String seed = "";
+        boolean start = false;
+        Font font = new Font("AvantGarde", Font.BOLD, 40);
+        StdDraw.setFont(font);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.enableDoubleBuffering();
+        Font sub = new Font("AvantGarde", Font.BOLD, 30);
+        StdDraw.setFont(sub);
+        StdDraw.text(400, 450, "Enter a seed. Type S to finish");
+        StdDraw.text(400, 420, "seed and start game.");
+        StdDraw.text(400, 350, seed);
+        StdDraw.show();
+        while (!start) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char dig = StdDraw.nextKeyTyped();
+                if (isNumber(dig)) {
+                    seed += dig;
+                    StdDraw.clear(Color.BLACK);
+                    StdDraw.text(400, 450, "Enter a seed. Type S to finish");
+                    StdDraw.text(400, 420, "seed and start game.");
+                    StdDraw.text(400, 350, seed);
+                    StdDraw.show();
+                } else if (Character.toUpperCase(dig) == 'S') {
+                    saveSeed(seed);
+                    start = true;
+                    namePlayer();
+                    createGame(Long.parseLong(seed));
+                }
+            }
+        }
+    }
+
+
+    public void namePlayer() {
+        String name = "";
+        boolean start = false;
+        Font font = new Font("AvantGarde", Font.BOLD, 40);
+        StdDraw.setFont(font);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.enableDoubleBuffering();
+        Font sub = new Font("AvantGarde", Font.BOLD, 30);
+        StdDraw.setFont(sub);
+        StdDraw.text(400, 450, "Enter player name followed by a comma.");
+        StdDraw.text(400, 350, name);
+        StdDraw.show();
+        while (!start) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char c = StdDraw.nextKeyTyped();
+                if (c != ',') {
+                    name += c;
+                    StdDraw.clear(Color.BLACK);
+                    StdDraw.text(400, 450, "Enter player name followed by a comma.");
+                    StdDraw.text(400, 350, name);
+                    StdDraw.show();
+                } else {
+                    saveName(name);
+                    start = true;
+                }
+            }
+        }
+    }
+
+    public void saveName(String name) {
+        File savedName = new File("./savedName.txt");
+        if (!savedName.exists()) {
+            try {
+                savedName.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        Utils.writeContents(savedName, name);
+    }
+
+
+
+
+
+    public Player loadPlayer(TETile[][] world) {
+        File savedPosition = new File("./savedPosition.txt");
+        Position oldPos = Utils.readObject(savedPosition, Position.class);
+        return new Player(oldPos, Tileset.AVATAR, world);
+    }
+
+
+
+    /** Creates and runs game. */
+    public void createGame(long l) {
+        ter.initialize(WIDTH, HEIGHT);
+        Random r = new Random(l);
+        TETile[][] world = generateWorld(r);
+        if (rooms.size() < 12) {
+            rooms.removeAll(rooms);
+            createGame(l + 1);
+
+        } else {
+            Room start = rooms.get(0);
+            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width), start.p.y + RandomUtils.uniform(r, start.height));
+            p1 = new Player(startingPosition, Tileset.AVATAR, world);
+            ter.renderFrame(world);
+            runGame(world);
+        }
+    }
+
+    public void runGame(TETile[][] world) {
+        ter.initialize(WIDTH, HEIGHT);
+        ter.renderFrame(world);
+        double currX = StdDraw.mouseX();
+        double currY = StdDraw.mouseY();
+        String message = "";
+        if (currX < WIDTH && currY < HEIGHT)
+            message = world[(int) currX][(int) currY].description();
+        StdDraw.setPenColor(StdDraw.WHITE);
+        headsUpDisplay(message);
+        try
+        {
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(new File("calm.wav")));
+            clip.start();
+        }
+        catch (Exception exc)
+        {
+            exc.printStackTrace(System.out);
+        }
+        while (true) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char c = StdDraw.nextKeyTyped();
+                if (c == ':') {
+                    boolean wait = true;
+                    while (wait) {
+                        if (StdDraw.hasNextKeyTyped()) {
+                            if (Character.toUpperCase(StdDraw.nextKeyTyped()) == 'Q') {
+                                System.exit(0);
+                            } else {
+                                wait = false;
+                            }
+                        }
+                    }
+                }
+                p1.move(c, world);
+                ter.renderFrame(world);
+                headsUpDisplay(message);
+            }
+            if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY && StdDraw.mouseX() < WIDTH && StdDraw.mouseY() < HEIGHT) {
+                currX = StdDraw.mouseX();
+                currY = StdDraw.mouseY();
+                message = world[(int) currX][(int) currY].description();
+                headsUpDisplay(message);
+            }
+        }
+    }
+
+    public void headsUpDisplay(String message) {
+        StdDraw.setPenColor(StdDraw.BLACK);
+        StdDraw.filledRectangle(5, HEIGHT - 1.7, 5, 1.3);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        /*if (!(message.equals("nothing") || message.equals(""))) {
+            StdDraw.text(4, HEIGHT - 1, message);
+        }*/
+        StdDraw.text(4, HEIGHT - 1, message);
+        File savedName = new File("./savedName.txt");
+        String name = Utils.readContentsAsString(savedName);
+        StdDraw.text(30, HEIGHT - 1, name);
+        StdDraw.line(0, HEIGHT -2, WIDTH, HEIGHT - 2);
+        StdDraw.show();
+    }
+
+    /** Checks if input is number. */
+    public static boolean isNumber(Character dig) {
+        for (Integer i = 0; i < 10; i += 1) {
+            if (dig.toString().equals(i.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Main menu of game. */
+    public void mainMenu() {
+        StdDraw.setCanvasSize(800, 800);
+        Font font = new Font("AvantGarde", Font.BOLD, 40);
+        StdDraw.setFont(font);
+        StdDraw.setXscale(0, 800);
+        StdDraw.setYscale(0, 800);
+        StdDraw.clear(Color.BLACK);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        StdDraw.enableDoubleBuffering();
+        String title = "CS61B: Uncreative Game Name";
+        StdDraw.text(400, 600, title);
+        Font sub = new Font("AvantGarde", Font.BOLD, 30);
+        StdDraw.setFont(sub);
+        StdDraw.text(400, 400, "New Game (N)");
+        StdDraw.text(400, 350, "Load Game (L)");
+        StdDraw.text(400, 300, "Quit (Q)");
+        StdDraw.show();
+        boolean optionChosen = false;
+        while (!optionChosen) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char c = StdDraw.nextKeyTyped();
+                if (Character.toUpperCase(c) == 'N') {
+                    optionChosen = true;
+                    newGame();
+                } else if (Character.toUpperCase(c) == 'L') {
+                    TETile[][] world = loadWorld();
+                    p1 = loadPlayer(world);
+                    runGame(world);
+                } else if (Character.toUpperCase(c) == 'Q') {
+                    System.exit(0);
+                }
+            }
+        }
+    }
+
+    /** Generate world at beginning of game. */
     public static TETile[][] generateWorld(Random random) {
         TETile[][] world = initializeTiles();
-        Position p = new byow.Core.Engine.Position(RandomUtils.uniform(random,
+        Position p = new Position(RandomUtils.uniform(random,
                 WIDTH / 2 - 5, WIDTH / 2 + 5), RandomUtils.uniform(random,
                 HEIGHT / 2 - 5, HEIGHT / 2 + 5));
-        Room r = new byow.Core.Engine.Room(p, getRandomRoomLength(random),
+        Room r = new Room(p, getRandomRoomLength(random),
                 getRandomRoomLength(random));
         drawRandomRoom(world, r, random);
         fillWalls(world);
         return world;
     }
-
-
-
-
 
     /**
      * Draws rectangular region on array of TETiles. Position p is the bottom
@@ -76,22 +377,7 @@ public class Engine {
         }
     }
 
-    /** Examples of what can be done so far. Currently where testing is happening.*/
-    public static void main(String[] args) {
-        TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
-        TETile[][] world = initializeTiles();
-        Random random = new Random();
-        byow.Core.Engine.Position p = new byow.Core.Engine.Position(RandomUtils.uniform(random,
-                WIDTH / 2 - 5, WIDTH / 2 + 5), RandomUtils.uniform(random,
-                HEIGHT / 2 - 5, HEIGHT / 2 + 5));
-        byow.Core.Engine.Room r = new byow.Core.Engine.Room(p, getRandomRoomLength(random),
-                getRandomRoomLength(random));
-        drawRandomRoom(world, r, random);
-        fillWalls(world);
-        ter.renderFrame(world);
-    }
-
+    /** Fills walls at world generation. */
     public static void fillWalls(TETile[][] tiles) {
         for (int x = 0; x < WIDTH; x += 1) {
             for (int y = 0; y < HEIGHT; y += 1) {
@@ -102,6 +388,7 @@ public class Engine {
         }
     }
 
+    /** Helper method to determine where to put walls. */
     public static boolean nearFloor(TETile[][] tiles, int x, int y) {
         if (x - 1 > 0) {
             if (tiles[x - 1][y].equals(Tileset.FLOOR)) {
@@ -145,8 +432,10 @@ public class Engine {
         return tiles;
     }
 
-    public static void drawRandomRoom(TETile[][] tiles, byow.Core.Engine.Room r, Random random) {
+    /** Draws rooms */
+    public static void drawRandomRoom(TETile[][] tiles, Room r, Random random) {
         drawRoom(tiles, r, random);
+        rooms.add(r);
         ArrayList<byow.Core.Engine.Room> surround = new ArrayList<>();
         if (RandomUtils.uniform(random) > 0.1) {
             surround.add(getTopNeighbor(r, 1, getRandomHallwayLength(random),
@@ -170,7 +459,7 @@ public class Engine {
             }
         }
     }
-
+    /** Draw random room. */
     public static void drawRandomHallway(TETile[][] tiles, byow.Core.Engine.Room h, Random random) {
         drawRoom(tiles, h, random);
         byow.Core.Engine.Room room1;
@@ -209,8 +498,8 @@ public class Engine {
                 }
             }
         }
-        if (RandomUtils.uniform(random) > 0.6) {
-            if (!cannotDraw(tiles, h1)) {
+        if (RandomUtils.uniform(random) > 0.85) {
+            if (!cannotDraw(tiles, h2)) {
                 drawRandomHallway(tiles, h2, random);
             } else {
                 if (!cannotDraw(tiles, room2)) {
@@ -220,10 +509,6 @@ public class Engine {
         } else {
             if (!cannotDraw(tiles, room2)) {
                 drawRandomRoom(tiles, room2, random);
-            } else {
-                if (!cannotDraw(tiles, h1)) {
-                    drawRandomHallway(tiles, h2, random);
-                }
             }
         }
     }
@@ -238,7 +523,8 @@ public class Engine {
         return RandomUtils.uniform(r, 6, 15);
     }
 
-    private static class Position {
+    /** Helper class for positions in world. */
+    private static class Position implements Serializable {
         int x;
         int y;
         Position(int x, int y) {
@@ -246,8 +532,58 @@ public class Engine {
             this.y = y;
         }
 
-        byow.Core.Engine.Position shift(int xLen, int yLen) {
+        Position shift(int xLen, int yLen) {
             return new byow.Core.Engine.Position(this.x + xLen, this.y + yLen);
+        }
+    }
+
+    /** Helper class for player that moves around map. */
+    private class Player {
+        Position position;
+        TETile tile;
+        TETile old;
+        ArrayList<Character> commands = new ArrayList<>();
+
+        Player(Position p, TETile t, TETile[][] tiles) {
+            position = p;
+            tile  = t;
+            commands.add('W');
+            commands.add('A');
+            commands.add('S');
+            commands.add('D');
+            draw(tiles);
+        }
+
+        void draw(TETile[][] tiles) {
+            old = tiles[position.x][position.y];
+            tiles[position.x][position.y] = tile;
+        }
+
+        void move(Character c, TETile[][] tiles) {
+            c = Character.toUpperCase(c);
+            if (commands.contains(c)) {
+                if (c.equals('W') && tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
+                    tiles[position.x][position.y] = old;
+                    position = position.shift(0, 1);
+                    savePosition(position);
+                    draw(tiles);
+                } else if (c.equals('A') && tiles[position.x - 1][position.y].equals(Tileset.FLOOR)) {
+                    tiles[position.x][position.y] = old;
+                    position = position.shift(-1, 0);
+                    savePosition(position);
+                    draw(tiles);
+                } else if (c.equals('S') && tiles[position.x][position.y - 1].equals(Tileset.FLOOR)) {
+                    tiles[position.x][position.y] = old;
+                    position = position.shift(0, -1);
+                    savePosition(position);
+                    draw(tiles);
+                } else if (c.equals('D') && tiles[position.x + 1][position.y].equals(Tileset.FLOOR)){
+                    tiles[position.x][position.y] = old;
+                    position = position.shift(1, 0);
+                    savePosition(position);
+                    draw(tiles);
+                }
+            }
         }
     }
 
@@ -277,8 +613,8 @@ public class Engine {
      * out of bounds with given x_len and y_len.
      */
     public static boolean isOutOfBounds(byow.Core.Engine.Room r) {
-        return r.p.x <= 1 || r.p.y <= 1 || r.p.x >= WIDTH - 1 || r.p.y >= HEIGHT - 1
-                || r.p.x + r.width >= WIDTH - 1 || r.p.y + r.height >= HEIGHT - 1;
+        return r.p.x <= 0 || r.p.y <= 0 || r.p.x >= WIDTH || r.p.y >= HEIGHT - 3
+                || r.p.x + r.width >= WIDTH || r.p.y + r.height >= HEIGHT - 3;
     }
 
     /** Checks if draw would result in overlap. */
@@ -293,25 +629,24 @@ public class Engine {
         return false;
     }
 
-    public static byow.Core.Engine.Room getRightNeighbor(byow.Core.Engine.Room r, int width, int height, int offset) {
+    public static Room getRightNeighbor(Room r, int width, int height, int offset) {
         byow.Core.Engine.Position newP =  r.p.shift(r.width, offset);
         return new byow.Core.Engine.Room(newP, width, height);
     }
 
-    public static byow.Core.Engine.Room getTopNeighbor(byow.Core.Engine.Room r, int width, int height, int offset) {
+    public static Room getTopNeighbor(Room r, int width, int height, int offset) {
         byow.Core.Engine.Position newP =  r.p.shift(offset, r.height);
         return new byow.Core.Engine.Room(newP, width, height);
     }
 
-    public static byow.Core.Engine.Room getLeftNeighbor(byow.Core.Engine.Room r, int width, int height, int offset) {
+    public static Room getLeftNeighbor(Room r, int width, int height, int offset) {
         byow.Core.Engine.Position newP = r.p.shift(-width, offset);
         return new byow.Core.Engine.Room(newP, width, height);
     }
 
-    public static byow.Core.Engine.Room getBottomNeighbor(byow.Core.Engine.Room r, int width, int height, int offset) {
+    public static Room getBottomNeighbor(Room r, int width, int height, int offset) {
         byow.Core.Engine.Position newP = r.p.shift(offset, -height);
         return new byow.Core.Engine.Room(newP, width, height);
     }
 
 }
-
