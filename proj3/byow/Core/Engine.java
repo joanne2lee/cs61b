@@ -244,6 +244,7 @@ public class Engine {
     }
 
     public void runGame(TETile[][] world) {
+        boolean fieldOfViewTurnedOn = true;
         ter.initialize(WIDTH, HEIGHT);
         ter.renderFrame(world);
         double currX = StdDraw.mouseX();
@@ -276,8 +277,15 @@ public class Engine {
                         }
                     }
                 }
+                if (Character.toUpperCase(c) == 'T') {
+                    fieldOfViewTurnedOn = !fieldOfViewTurnedOn;
+                }
                 p1.move(c, world);
-                ter.renderFrame(world);
+                if (fieldOfViewTurnedOn) {
+                    ter.renderFrame(fieldOfView(world));
+                } else {
+                    ter.renderFrame(world);
+                }
                 headsUpDisplay(message);
             }
             if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY
@@ -289,6 +297,27 @@ public class Engine {
             }
         }
     }
+
+
+
+    public TETile[][] fieldOfView(TETile[][] world) {
+        TETile[][] field = initializeTiles();
+        Position p = p1.position;
+        for (int x = 0; x < 7; x += 1) {
+            for (int y = 0; y < 7; y += 1) {
+                if (validLoc(p.x - 3 + x, p.y - 3 + y)) {
+                    field[p.x - 3 + x][p.y - 3 + y] = world[p.x - 3 + x][p.y - 3 + y];
+                }
+            }
+        }
+        return field;
+    }
+
+    public static boolean validLoc(int x, int y) {
+        return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
+    }
+
+
 
     public void headsUpDisplay(String message) {
         StdDraw.setPenColor(StdDraw.BLACK);
