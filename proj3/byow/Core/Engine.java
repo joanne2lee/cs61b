@@ -323,9 +323,6 @@ public class Engine {
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.filledRectangle(5, HEIGHT - 1.7, 5, 1.3);
         StdDraw.setPenColor(StdDraw.WHITE);
-        /*if (!(message.equals("nothing") || message.equals(""))) {
-            StdDraw.text(4, HEIGHT - 1, message);
-        }*/
         StdDraw.text(4, HEIGHT - 1, message);
         File savedName = new File("./savedName.txt");
         String name = Utils.readContentsAsString(savedName);
@@ -354,7 +351,7 @@ public class Engine {
         StdDraw.clear(Color.BLACK);
         StdDraw.setPenColor(StdDraw.WHITE);
         StdDraw.enableDoubleBuffering();
-        String title = "CS61B: Uncreative Game Name";
+        String title = "The Mountains are Calling";
         StdDraw.text(400, 600, title);
         Font sub = new Font("AvantGarde", Font.BOLD, 30);
         StdDraw.setFont(sub);
