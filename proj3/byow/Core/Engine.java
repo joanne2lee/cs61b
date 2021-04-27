@@ -30,7 +30,6 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
-
         mainMenu();
     }
 
@@ -384,7 +383,7 @@ public class Engine {
         for (int x = 0; x < WIDTH; x += 1) {
             for (int y = 0; y < HEIGHT; y += 1) {
                 if (tiles[x][y].equals(Tileset.NOTHING) && nearFloor(tiles, x, y)) {
-                    tiles[x][y] = Tileset.WALL;
+                    tiles[x][y] = Tileset.MOUNTAIN;
                 }
             }
         }
