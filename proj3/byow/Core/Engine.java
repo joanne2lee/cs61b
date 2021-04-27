@@ -3,11 +3,12 @@ package byow.Core;
 import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
-import edu.princeton.cs.introcs.StdAudio;
 import edu.princeton.cs.introcs.StdDraw;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.File;
 
 import java.awt.*;
@@ -22,8 +23,8 @@ public class Engine {
     /* Feel free to change the width and height. */
     public static final int WIDTH = 100;
     public static final int HEIGHT = 50;
-    public static final ArrayList<Room> rooms = new ArrayList<>();
-    public Player p1;
+    public static final ArrayList<Room> ROOMS = new ArrayList<>();
+    Player p1;
     /**
      * Method used for exploring a fresh world. This method should handle all inputs,
      * including inputs from the main menu.
@@ -64,8 +65,9 @@ public class Engine {
             Random r = new Random(seed);
             world = generateWorld(r);
             saveSeed(input.substring(1, endOfSeed));
-            Room start = rooms.get(0);
-            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width), start.p.y + RandomUtils.uniform(r, start.height));
+            Room start = ROOMS.get(0);
+            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width),
+                    start.p.y + RandomUtils.uniform(r, start.height));
             p1 = new Player(startingPosition, Tileset.AVATAR, world);
             char[] moves = input.substring(endOfSeed + 1).toCharArray();
             for (char m : moves) {
@@ -78,7 +80,7 @@ public class Engine {
 
         } else if (input.charAt(0) == 'L') {
             world = loadWorld();
-            Player p1 = loadPlayer(world);
+            p1 = loadPlayer(world);
             char[] moves = input.substring(1).toCharArray();
             for (char m : moves) {
                 if (m == ':') {
@@ -228,13 +230,14 @@ public class Engine {
         ter.initialize(WIDTH, HEIGHT);
         Random r = new Random(l);
         TETile[][] world = generateWorld(r);
-        if (rooms.size() < 12) {
-            rooms.removeAll(rooms);
+        if (ROOMS.size() < 12) {
+            ROOMS.removeAll(ROOMS);
             createGame(l + 1);
 
         } else {
-            Room start = rooms.get(0);
-            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width), start.p.y + RandomUtils.uniform(r, start.height));
+            Room start = ROOMS.get(0);
+            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width),
+                    start.p.y + RandomUtils.uniform(r, start.height));
             p1 = new Player(startingPosition, Tileset.AVATAR, world);
             ter.renderFrame(world);
             runGame(world);
@@ -247,18 +250,16 @@ public class Engine {
         double currX = StdDraw.mouseX();
         double currY = StdDraw.mouseY();
         String message = "";
-        if (currX < WIDTH && currY < HEIGHT)
+        if (currX < WIDTH && currY < HEIGHT) {
             message = world[(int) currX][(int) currY].description();
+        }
         StdDraw.setPenColor(StdDraw.WHITE);
         headsUpDisplay(message);
-        try
-        {
+        try {
             Clip clip = AudioSystem.getClip();
             clip.open(AudioSystem.getAudioInputStream(new File("calm.wav")));
             clip.start();
-        }
-        catch (Exception exc)
-        {
+        } catch (IOException | LineUnavailableException | UnsupportedAudioFileException exc) {
             exc.printStackTrace(System.out);
         }
         while (true) {
@@ -280,7 +281,8 @@ public class Engine {
                 ter.renderFrame(world);
                 headsUpDisplay(message);
             }
-            if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY && StdDraw.mouseX() < WIDTH && StdDraw.mouseY() < HEIGHT) {
+            if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY &&
+                    StdDraw.mouseX() < WIDTH && StdDraw.mouseY() < HEIGHT) {
                 currX = StdDraw.mouseX();
                 currY = StdDraw.mouseY();
                 message = world[(int) currX][(int) currY].description();
@@ -300,7 +302,7 @@ public class Engine {
         File savedName = new File("./savedName.txt");
         String name = Utils.readContentsAsString(savedName);
         StdDraw.text(30, HEIGHT - 1, name);
-        StdDraw.line(0, HEIGHT -2, WIDTH, HEIGHT - 2);
+        StdDraw.line(0, HEIGHT - 2, WIDTH, HEIGHT - 2);
         StdDraw.show();
     }
 
@@ -435,7 +437,7 @@ public class Engine {
     /** Draws rooms */
     public static void drawRandomRoom(TETile[][] tiles, Room r, Random random) {
         drawRoom(tiles, r, random);
-        rooms.add(r);
+        ROOMS.add(r);
         ArrayList<byow.Core.Engine.Room> surround = new ArrayList<>();
         if (RandomUtils.uniform(random) > 0.1) {
             surround.add(getTopNeighbor(r, 1, getRandomHallwayLength(random),
@@ -562,22 +564,26 @@ public class Engine {
         void move(Character c, TETile[][] tiles) {
             c = Character.toUpperCase(c);
             if (commands.contains(c)) {
-                if (c.equals('W') && tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
+                if (c.equals('W') &&
+                        tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(0, 1);
                     savePosition(position);
                     draw(tiles);
-                } else if (c.equals('A') && tiles[position.x - 1][position.y].equals(Tileset.FLOOR)) {
+                } else if (c.equals('A') &&
+                        tiles[position.x - 1][position.y].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(-1, 0);
                     savePosition(position);
                     draw(tiles);
-                } else if (c.equals('S') && tiles[position.x][position.y - 1].equals(Tileset.FLOOR)) {
+                } else if (c.equals('S') &&
+                        tiles[position.x][position.y - 1].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(0, -1);
                     savePosition(position);
                     draw(tiles);
-                } else if (c.equals('D') && tiles[position.x + 1][position.y].equals(Tileset.FLOOR)){
+                } else if (c.equals('D') &&
+                        tiles[position.x + 1][position.y].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(1, 0);
                     savePosition(position);
