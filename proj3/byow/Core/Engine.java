@@ -66,9 +66,9 @@ public class Engine {
             world = generateWorld(r);
             saveSeed(input.substring(1, endOfSeed));
             Room start = ROOMS.get(0);
-            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width),
+            Position startPos = new Position(start.p.x + RandomUtils.uniform(r, start.width),
                     start.p.y + RandomUtils.uniform(r, start.height));
-            p1 = new Player(startingPosition, Tileset.AVATAR, world);
+            p1 = new Player(startPos, Tileset.AVATAR, world);
             char[] moves = input.substring(endOfSeed + 1).toCharArray();
             for (char m : moves) {
                 if (m == ':') {
@@ -236,9 +236,9 @@ public class Engine {
 
         } else {
             Room start = ROOMS.get(0);
-            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r, start.width),
+            Position startPos = new Position(start.p.x + RandomUtils.uniform(r, start.width),
                     start.p.y + RandomUtils.uniform(r, start.height));
-            p1 = new Player(startingPosition, Tileset.AVATAR, world);
+            p1 = new Player(startPos, Tileset.AVATAR, world);
             ter.renderFrame(world);
             runGame(world);
         }
@@ -281,8 +281,8 @@ public class Engine {
                 ter.renderFrame(world);
                 headsUpDisplay(message);
             }
-            if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY &&
-                    StdDraw.mouseX() < WIDTH && StdDraw.mouseY() < HEIGHT) {
+            if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY
+                    && StdDraw.mouseX() < WIDTH && StdDraw.mouseY() < HEIGHT) {
                 currX = StdDraw.mouseX();
                 currY = StdDraw.mouseY();
                 message = world[(int) currX][(int) currY].description();
@@ -564,26 +564,26 @@ public class Engine {
         void move(Character c, TETile[][] tiles) {
             c = Character.toUpperCase(c);
             if (commands.contains(c)) {
-                if (c.equals('W') &&
-                        tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
+                if (c.equals('W')
+                        && tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(0, 1);
                     savePosition(position);
                     draw(tiles);
-                } else if (c.equals('A') &&
-                        tiles[position.x - 1][position.y].equals(Tileset.FLOOR)) {
+                } else if (c.equals('A')
+                        && tiles[position.x - 1][position.y].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(-1, 0);
                     savePosition(position);
                     draw(tiles);
-                } else if (c.equals('S') &&
-                        tiles[position.x][position.y - 1].equals(Tileset.FLOOR)) {
+                } else if (c.equals('S')
+                        && tiles[position.x][position.y - 1].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(0, -1);
                     savePosition(position);
                     draw(tiles);
-                } else if (c.equals('D') &&
-                        tiles[position.x + 1][position.y].equals(Tileset.FLOOR)) {
+                } else if (c.equals('D')
+                        && tiles[position.x + 1][position.y].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(1, 0);
                     savePosition(position);
@@ -656,3 +656,5 @@ public class Engine {
     }
 
 }
+
+
