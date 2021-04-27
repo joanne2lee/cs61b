@@ -13,7 +13,6 @@ import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
 
 
-
 /** Assorted utilities.
  *
  * Give this file a good read as it provides several useful utility functions
