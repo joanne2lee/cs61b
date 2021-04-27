@@ -63,10 +63,10 @@ public class Engine {
             Random r = new Random(seed);
             world = generateWorld(r);
             saveSeed(input.substring(1, endOfSeed));
-            byow.Core.Engine.Room start = ROOMS.get(0);
-            byow.Core.Engine.Position startPos = new byow.Core.Engine.Position(start.p.x + RandomUtils.uniform(r, start.width),
+            Room start = ROOMS.get(0);
+            Position startPos = new Position(start.p.x + RandomUtils.uniform(r, start.width),
                     start.p.y + RandomUtils.uniform(r, start.height));
-            p1 = new byow.Core.Engine.Player(startPos, Tileset.AVATAR, world);
+            p1 = new Player(startPos, Tileset.AVATAR, world);
             char[] moves = input.substring(endOfSeed + 1).toCharArray();
             for (char m : moves) {
                 if (m == ':') {
@@ -134,14 +134,14 @@ public class Engine {
     }
 
     public static void main(String[] args) {
-        // TERenderer ter = new TERenderer();
-        // ter.initialize(100, 50);
-        // Engine e = new Engine();
-        // TETile[][] world = e.interactWithInputString("");;
-        // ter.renderFrame(world);
-
+        TERenderer ter = new TERenderer();
+        ter.initialize(100, 50);
         Engine e = new Engine();
-        e.interactWithKeyboard();
+        TETile[][] world = e.interactWithInputString("n7142401535173564015sadaadsddsswsa");
+        ter.renderFrame(world);
+
+        // Engine e = new Engine();
+        // e.interactWithKeyboard();
     }
 
     /** New game option, with ability to enter seed. */
