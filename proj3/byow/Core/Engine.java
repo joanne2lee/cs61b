@@ -72,6 +72,7 @@ public class Engine {
                 if (m == ':') {
                     int quit = input.indexOf(':');
                     if (input.substring(quit).length() > 3) {
+                        savePosition(p1.position);
                         world = interactWithInputString(input.substring(quit + 2));
                     }
                     break;
@@ -137,7 +138,7 @@ public class Engine {
         TERenderer ter = new TERenderer();
         ter.initialize(100, 50);
         Engine e = new Engine();
-        TETile[][] world = e.interactWithInputString("n7142401535173564015sadaadsddsswsa");
+        TETile[][] world = e.interactWithInputString("");
         ter.renderFrame(world);
 
         // Engine e = new Engine();
