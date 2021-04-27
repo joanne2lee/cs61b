@@ -1,5 +1,8 @@
 package byow.Core;
 
+import byow.TileEngine.TETile;
+import byow.TileEngine.Tileset;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -11,6 +14,7 @@ import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.charset.StandardCharsets;
+import java.util.Random;
 
 
 /** Assorted utilities.
