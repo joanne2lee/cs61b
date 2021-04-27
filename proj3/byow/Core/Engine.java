@@ -70,11 +70,6 @@ public class Engine {
             char[] moves = input.substring(endOfSeed + 1).toCharArray();
             for (char m : moves) {
                 if (m == ':') {
-                    int quit = input.indexOf(':');
-                    if (input.substring(quit).length() > 3) {
-                        savePosition(p1.position);
-                        world = interactWithInputString(input.substring(quit + 2));
-                    }
                     break;
                 }
                 p1.move(m, world);
@@ -138,7 +133,8 @@ public class Engine {
         TERenderer ter = new TERenderer();
         ter.initialize(100, 50);
         Engine e = new Engine();
-        TETile[][] world = e.interactWithInputString("");
+        TETile[][] world = e.interactWithInputString("n7142401535173564015sadaadsddssw:q");
+        world = e.interactWithInputString("lsa");
         ter.renderFrame(world);
 
         // Engine e = new Engine();
