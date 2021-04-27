@@ -4,13 +4,14 @@ import byow.TileEngine.TERenderer;
 import byow.TileEngine.TETile;
 import byow.TileEngine.Tileset;
 import edu.princeton.cs.introcs.StdDraw;
+
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.awt.Font;
-import java.awt.Color;
 import java.io.File;
+
+import java.awt.*;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public class Engine {
      * including inputs from the main menu.
      */
     public void interactWithKeyboard() {
+
         mainMenu();
     }
 
@@ -91,7 +93,6 @@ public class Engine {
         return world;
     }
 
-
     public void saveSeed(String seed) {
         File savedWorld = new File("./savedWorld.txt");
         if (!savedWorld.exists()) {
@@ -130,15 +131,8 @@ public class Engine {
     }
 
     public static void main(String[] args) {
-        TERenderer ter = new TERenderer();
-        ter.initialize(100, 50);
         Engine e = new Engine();
-        TETile[][] world = e.interactWithInputString("n7142401535173564015sadaadsddssw:q");
-        world = e.interactWithInputString("lsa");
-        ter.renderFrame(world);
-
-        // Engine e = new Engine();
-        // e.interactWithKeyboard();
+        e.interactWithKeyboard();
     }
 
     /** New game option, with ability to enter seed. */
@@ -242,18 +236,17 @@ public class Engine {
 
         } else {
             Room start = ROOMS.get(0);
-            Position startingPosition = new Position(start.p.x + RandomUtils.uniform(r,
-                    start.width), start.p.y + RandomUtils.uniform(r, start.height));
-            p1 = new Player(startingPosition, Tileset.AVATAR, world);
+            Position startPos = new Position(start.p.x + RandomUtils.uniform(r, start.width),
+                    start.p.y + RandomUtils.uniform(r, start.height));
+            p1 = new Player(startPos, Tileset.AVATAR, world);
             ter.renderFrame(world);
             runGame(world);
         }
     }
 
     public void runGame(TETile[][] world) {
-        boolean fieldOfViewTurnedOn = true;
         ter.initialize(WIDTH, HEIGHT);
-        ter.renderFrame(fieldOfView(world));
+        ter.renderFrame(world);
         double currX = StdDraw.mouseX();
         double currY = StdDraw.mouseY();
         String message = "";
@@ -266,12 +259,8 @@ public class Engine {
             Clip clip = AudioSystem.getClip();
             clip.open(AudioSystem.getAudioInputStream(new File("calm.wav")));
             clip.start();
-        } catch (UnsupportedAudioFileException e) {
-            e.printStackTrace();
-        } catch (LineUnavailableException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException | LineUnavailableException | UnsupportedAudioFileException exc) {
+            exc.printStackTrace(System.out);
         }
         while (true) {
             if (StdDraw.hasNextKeyTyped()) {
@@ -288,15 +277,8 @@ public class Engine {
                         }
                     }
                 }
-                if (Character.toUpperCase(c) == 'T') {
-                    fieldOfViewTurnedOn = !fieldOfViewTurnedOn;
-                }
                 p1.move(c, world);
-                if (fieldOfViewTurnedOn) {
-                    ter.renderFrame(fieldOfView(world));
-                } else {
-                    ter.renderFrame(world);
-                }
+                ter.renderFrame(world);
                 headsUpDisplay(message);
             }
             if (StdDraw.mouseX() != currX || StdDraw.mouseY() != currY
@@ -309,28 +291,17 @@ public class Engine {
         }
     }
 
-    public TETile[][] fieldOfView(TETile[][] world) {
-        TETile[][] field = initializeTiles();
-        Position p = p1.position;
-        for (int x = 0; x < 7; x += 1) {
-            for (int y = 0; y < 7; y += 1) {
-                if (validLoc(p.x - 3 + x, p.y - 3 + y)) {
-                    field[p.x - 3 + x][p.y - 3 + y] = world[p.x - 3 + x][p.y - 3 + y];
-                }
-            }
-        }
-        return field;
-    }
-
     public void headsUpDisplay(String message) {
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.filledRectangle(5, HEIGHT - 1.7, 5, 1.3);
+        StdDraw.setPenColor(StdDraw.WHITE);
+        /*if (!(message.equals("nothing") || message.equals(""))) {
+            StdDraw.text(4, HEIGHT - 1, message);
+        }*/
+        StdDraw.text(4, HEIGHT - 1, message);
         File savedName = new File("./savedName.txt");
         String name = Utils.readContentsAsString(savedName);
-        StdDraw.filledRectangle(30, HEIGHT - 0.5, 15, 1.1);
-        StdDraw.setPenColor(StdDraw.WHITE);
         StdDraw.text(30, HEIGHT - 1, name);
-        StdDraw.text(4, HEIGHT - 1, message);
         StdDraw.line(0, HEIGHT - 2, WIDTH, HEIGHT - 2);
         StdDraw.show();
     }
@@ -355,7 +326,7 @@ public class Engine {
         StdDraw.clear(Color.BLACK);
         StdDraw.setPenColor(StdDraw.WHITE);
         StdDraw.enableDoubleBuffering();
-        String title = "The Mountains are Calling";
+        String title = "CS61B: Uncreative Game Name";
         StdDraw.text(400, 600, title);
         Font sub = new Font("AvantGarde", Font.BOLD, 30);
         StdDraw.setFont(sub);
@@ -390,12 +361,8 @@ public class Engine {
         Room r = new Room(p, getRandomRoomLength(random),
                 getRandomRoomLength(random));
         drawRandomRoom(world, r, random);
-        fillWalls(world, random);
+        fillWalls(world);
         return world;
-    }
-
-    public static boolean validLoc(int x, int y) {
-        return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
     }
 
     /**
@@ -404,7 +371,7 @@ public class Engine {
      * height of the region. Total area drawn by one call of drawRoom is x_len + 2
      * by y_len + 2, starting at (p.x, p.y) as bottom left.
      */
-    public static void drawRoom(TETile[][] tiles, Room r, Random random) {
+    public static void drawRoom(TETile[][] tiles, byow.Core.Engine.Room r, Random random) {
         for (int i = 0; i < r.width; i += 1) {
             for (int j = 0; j < r.height; j += 1) {
                 tiles[r.p.x + i][r.p.y + j] = Tileset.FLOOR;
@@ -413,11 +380,11 @@ public class Engine {
     }
 
     /** Fills walls at world generation. */
-    public static void fillWalls(TETile[][] tiles, Random r) {
+    public static void fillWalls(TETile[][] tiles) {
         for (int x = 0; x < WIDTH; x += 1) {
             for (int y = 0; y < HEIGHT; y += 1) {
                 if (tiles[x][y].equals(Tileset.NOTHING) && nearFloor(tiles, x, y)) {
-                    tiles[x][y] = Tileset.MOUNTAIN;
+                    tiles[x][y] = Tileset.WALL;
                 }
             }
         }
@@ -467,11 +434,11 @@ public class Engine {
         return tiles;
     }
 
-    /** Draws ROOMS */
+    /** Draws rooms */
     public static void drawRandomRoom(TETile[][] tiles, Room r, Random random) {
         drawRoom(tiles, r, random);
         ROOMS.add(r);
-        ArrayList<Room> surround = new ArrayList<>();
+        ArrayList<byow.Core.Engine.Room> surround = new ArrayList<>();
         if (RandomUtils.uniform(random) > 0.1) {
             surround.add(getTopNeighbor(r, 1, getRandomHallwayLength(random),
                     RandomUtils.uniform(random, 1, r.width - 1)));
@@ -488,19 +455,19 @@ public class Engine {
             surround.add(getLeftNeighbor(r, getRandomHallwayLength(random), 1,
                     RandomUtils.uniform(random, 1, r.height - 1)));
         }
-        for (Room room: surround) {
+        for (byow.Core.Engine.Room room: surround) {
             if (!cannotDraw(tiles, room)) {
                 drawRandomHallway(tiles, room, random);
             }
         }
     }
     /** Draw random room. */
-    public static void drawRandomHallway(TETile[][] tiles, Room h, Random random) {
+    public static void drawRandomHallway(TETile[][] tiles, byow.Core.Engine.Room h, Random random) {
         drawRoom(tiles, h, random);
-        Room room1;
-        Room room2;
-        Room h1;
-        Room h2;
+        byow.Core.Engine.Room room1;
+        byow.Core.Engine.Room room2;
+        byow.Core.Engine.Room h1;
+        byow.Core.Engine.Room h2;
         if (h.width < h.height) {
             room1 = getTopNeighbor(h, getRandomRoomLength(random), getRandomRoomLength(random),
                     RandomUtils.uniform(random, -4, 1));
@@ -568,7 +535,7 @@ public class Engine {
         }
 
         Position shift(int xLen, int yLen) {
-            return new Position(this.x + xLen, this.y + yLen);
+            return new byow.Core.Engine.Position(this.x + xLen, this.y + yLen);
         }
     }
 
@@ -582,7 +549,6 @@ public class Engine {
         Player(Position p, TETile t, TETile[][] tiles) {
             position = p;
             tile  = t;
-            old = Tileset.FLOOR;
             commands.add('W');
             commands.add('A');
             commands.add('S');
@@ -591,13 +557,15 @@ public class Engine {
         }
 
         void draw(TETile[][] tiles) {
+            old = tiles[position.x][position.y];
             tiles[position.x][position.y] = tile;
         }
 
         void move(Character c, TETile[][] tiles) {
             c = Character.toUpperCase(c);
             if (commands.contains(c)) {
-                if (c.equals('W') && tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
+                if (c.equals('W')
+                        && tiles[position.x][position.y + 1].equals(Tileset.FLOOR)) {
                     tiles[position.x][position.y] = old;
                     position = position.shift(0, 1);
                     savePosition(position);
@@ -630,11 +598,11 @@ public class Engine {
      * coordinate of the bottom left wall.
      */
     private static class Room {
-        Position p;
+        byow.Core.Engine.Position p;
         int width;
         int height;
 
-        Room(Position p, int width, int height) {
+        Room(byow.Core.Engine.Position p, int width, int height) {
             this.p = p;
             this.width = width;
             this.height = height;
@@ -642,7 +610,7 @@ public class Engine {
     }
 
     /** Returns true if cannot draw room. */
-    public static boolean cannotDraw(TETile[][] tiles, Room r) {
+    public static boolean cannotDraw(TETile[][] tiles, byow.Core.Engine.Room r) {
         return isOutOfBounds(r) || conflictDraw(tiles, r);
     }
 
@@ -650,13 +618,13 @@ public class Engine {
      * Checks if current position is out of bounds or would result in
      * out of bounds with given x_len and y_len.
      */
-    public static boolean isOutOfBounds(Room r) {
+    public static boolean isOutOfBounds(byow.Core.Engine.Room r) {
         return r.p.x <= 0 || r.p.y <= 0 || r.p.x >= WIDTH || r.p.y >= HEIGHT - 3
                 || r.p.x + r.width >= WIDTH || r.p.y + r.height >= HEIGHT - 3;
     }
 
     /** Checks if draw would result in overlap. */
-    public static boolean conflictDraw(TETile[][] tiles, Room r) {
+    public static boolean conflictDraw(TETile[][] tiles, byow.Core.Engine.Room r) {
         for (int x = 0; x < r.width; x += 1) {
             for (int y = 0; y < r.height; y += 1) {
                 if (!tiles[r.p.x + x][r.p.y + y].equals(Tileset.NOTHING)) {
@@ -668,23 +636,23 @@ public class Engine {
     }
 
     public static Room getRightNeighbor(Room r, int width, int height, int offset) {
-        Position newP =  r.p.shift(r.width, offset);
-        return new Room(newP, width, height);
+        byow.Core.Engine.Position newP =  r.p.shift(r.width, offset);
+        return new byow.Core.Engine.Room(newP, width, height);
     }
 
     public static Room getTopNeighbor(Room r, int width, int height, int offset) {
-        Position newP =  r.p.shift(offset, r.height);
-        return new Room(newP, width, height);
+        byow.Core.Engine.Position newP =  r.p.shift(offset, r.height);
+        return new byow.Core.Engine.Room(newP, width, height);
     }
 
     public static Room getLeftNeighbor(Room r, int width, int height, int offset) {
-        Position newP = r.p.shift(-width, offset);
-        return new Room(newP, width, height);
+        byow.Core.Engine.Position newP = r.p.shift(-width, offset);
+        return new byow.Core.Engine.Room(newP, width, height);
     }
 
     public static Room getBottomNeighbor(Room r, int width, int height, int offset) {
-        Position newP = r.p.shift(offset, -height);
-        return new Room(newP, width, height);
+        byow.Core.Engine.Position newP = r.p.shift(offset, -height);
+        return new byow.Core.Engine.Room(newP, width, height);
     }
 
 }
